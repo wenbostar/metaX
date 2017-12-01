@@ -25,4 +25,4 @@ Contributions to the package are more than welcome.
 
 ## Function request
 
-If you have any new functions which you want to be added into metaX, please feel free to open an issue to describe what you want. I will discuss with you about how to implement that.
+If you have any new functions which you want to be added into metaX, please feel free to open an *[issue](https://github.com/wenbostar/metaX/issues)* to describe what you want. I will discuss with you about how to implement that.
