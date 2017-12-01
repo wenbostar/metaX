@@ -21,3 +21,8 @@ To cite the `metaX` package in publications, please use:
 ## Contribution
 
 Contributions to the package are more than welcome. 
+
+
+## Function request
+
+If you have any new functionswhich you want to be added into metaX, please feel free to open an issue to describe what you want. I will discuss with you about how to implement that.
