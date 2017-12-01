@@ -1,5 +1,5 @@
 ## metaX
-*[metaX](http://metax.genomics.cn)*: An Automatic and Comprehensive Pipeline for Processing Untargeted Metabolomics Data.
+*[metaX](http://metax.genomics.cn)*: An Automatic and Comprehensive Pipeline for Processing Untargeted Metabolomics Data. Please go to the website of metaX to find more information about metaX: *[http://metax.genomics.cn](http://metax.genomics.cn)*.
 
 ## Installation
 
