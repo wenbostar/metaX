@@ -7,8 +7,8 @@
 
 ``` r
 # Install the development version from GitHub:
-# install.packages("devtools")
-devtools::install_github("wenbostar/metaX")
+source("https://bioconductor.org/biocLite.R")
+biocLite("wenbostar/metaX")
 ```
 
 ## Usage
