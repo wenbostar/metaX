@@ -5,7 +5,11 @@
 
 ## Installation
 
-To install *[metaX](http://metax.genomics.cn)*
+``` r
+# Install the development version from GitHub:
+# install.packages("devtools")
+devtools::install_github("wenbostar/metaX")
+```
 
 Please follow the instruction in website *[metaX](http://metax.genomics.cn)*
 
