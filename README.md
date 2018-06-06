@@ -11,8 +11,6 @@
 devtools::install_github("wenbostar/metaX")
 ```
 
-Please follow the instruction in website *[metaX](http://metax.genomics.cn)*
-
 ## Usage
 
 Please follow the instruction in website *[metaX](http://metax.genomics.cn)*
