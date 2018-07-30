@@ -64,6 +64,7 @@ importFrom(mzR,openMSfile,header)
 importFrom(fpc,bhattacharyya.dist)
 importFrom(ropls,opls)
 importFrom(sva,ComBat)
+importFrom(ComplexHeatmap,HeatmapAnnotation,Heatmap,draw)
 
 export(makeDirectory)
 export(peakFinder)
