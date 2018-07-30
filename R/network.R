@@ -267,6 +267,12 @@ plotNetwork=function(para,group,valueID="value",cor.thr=0.95,degree.thr=10,
 ##' @param samples Samples used for plot
 ##' @param label Label to show in figure
 ##' @param cor.method Method used for correlation
+##' @param sortBy Sort the sample name according the this value, default 
+##' is "class". This is valid when cluster is FALSE. 
+##' Valid value: class, order, batch. This parameter is useful to 
+##' sort the sample name according to batch name when users want to
+##' check batch effect.
+##' @param colorRange The color range of heatmap.
 ##' @param shownames A logical indicates whether show names when plot
 ##' @param width The width of the graphics region in inches. 
 ##' The default values are 6.
@@ -278,7 +284,7 @@ plotNetwork=function(para,group,valueID="value",cor.thr=0.95,degree.thr=10,
 ##' anno is TRUE 
 ##' @param ... Additional parameter
 ##' @return The fig name
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' para <- new("metaXpara")
@@ -290,34 +296,53 @@ plotNetwork=function(para,group,valueID="value",cor.thr=0.95,degree.thr=10,
 ##' para <- missingValueImpute(para)
 ##' plotCorHeatmap(para,valueID="value",samples=NULL,width=6,anno=TRUE)
 plotCorHeatmap=function(para,valueID="value",samples=NA,label="order",width=6,
-                        cor.method="spearman",
-                        height=6,anno=FALSE,cluster=FALSE,shownames=FALSE,...){
+                        cor.method="spearman",sortBy="class",colorRange=NULL,
+                        height=6,anno=FALSE,cluster=FALSE,shownames=FALSE,
+                        classCol=NULL,...){
     peaksData <- para@peaksData
-    samList <- read.delim(para@sampleListFile)
+    # samList <- read.delim(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        samList  <- para@sampleList
+    }
     
     if(is.null(samples)){
         message("use all the samples...")
     }else if(any(is.na(samples))){
         ## plot for QC samples
+        message("use QC samples...")
         peaksData <- dplyr::filter(peaksData,is.na(class))
         samList <- dplyr::filter(samList,is.na(class))
     }else{
-        peaksData <- dplyr::filter(peaksData,class %in% samples)
-        samList <- dplyr::filter(samList,class %in% samples)
+        message("use provided samples...")
+        peaksData <- dplyr::filter(peaksData,sample %in% samples)
+        samList <- dplyr::filter(samList,sample %in% samples)
     }
     
+    
     if(label=="order"){
-        xyData <- dcast(peaksData,ID~order,value.var = valueID)
+        #xyData <- dcast(peaksData,ID~order,value.var = valueID)
+        xyData <- peaksData %>% dplyr::select(ID,order,!!valueID) %>% 
+            tidyr::spread(key = order,value=!!valueID)
         xyData <- dplyr::select(xyData,-ID)
     }else{
-        xyData <- dcast(peaksData,ID~sample,value.var = valueID)
+        #xyData <- dcast(peaksData,ID~sample,value.var = valueID)
+        xyData <- peaksData %>% dplyr::select(ID,sample,!!valueID) %>% 
+            tidyr::spread(key = sample,value=!!valueID)
         xyData <- dplyr::select(xyData,-ID)
         
     }
     
     
-    
-    samList <- samList[order(samList$class,samList$order),]
+    if(sortBy =="class"){
+        samList <- samList[order(samList$class,samList$order),]
+    }else if(sortBy == "order"){
+        samList <- samList[order(samList$order),]
+    }else if(sortBy == "batch"){
+        samList <- samList[order(samList$batch,samList$order),]
+    }
     samList$order <- as.character(samList$order)
     if(label=="order"){
         diffs <- setdiff(samList$order,names(xyData))
@@ -336,7 +361,9 @@ plotCorHeatmap=function(para,valueID="value",samples=NA,label="order",width=6,
         samList <- dplyr::filter(samList,!sample %in% diffs)
         xyData <- xyData[,samList$sample]
     }
-    corres <- cor(xyData,method = cor.method,...)
+    #corres <- cor(xyData,method = cor.method,...)
+    corres <- cor(xyData,method = cor.method,use = "complete.obs")
+    #save(corres,xyData,file="xy.rda")
     if(is.null(samples)){
         prefix = "ALL"
     }else{
@@ -370,6 +397,7 @@ plotCorHeatmap=function(para,valueID="value",samples=NA,label="order",width=6,
         samList$class[is.na(samList$class)] <- "QC"
         annotationList <- data.frame(Class=samList$class,
                                      Batch=as.character(samList$batch))
+        annotationList$Batch <- factor(annotationList$Batch,levels = sort(unique(samList$batch)))
         if(label=="order"){
             row.names(annotationList) <- samList$order
         }else{
@@ -377,18 +405,67 @@ plotCorHeatmap=function(para,valueID="value",samples=NA,label="order",width=6,
         }
         
         pdf(figpdf,width = width,height =height)
-        pheatmap(corres,annotation=annotationList,border_color = NA,
-                 cluster_rows=cluster,cluster_cols = cluster,
-                 show_colnames = shownames,show_rownames=shownames,...)
+        
+        if(!is.null(colorRange)){
+            breaksList <- seq(colorRange[1],colorRange[2],length.out = 30)
+            
+            color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList))
+
+            pheatmap(corres,annotation=annotationList,border_color = NA,
+                     cluster_rows=cluster,cluster_cols = cluster, color = color, breaks = breaksList,
+                     show_colnames = shownames,show_rownames=shownames,...)
+        }else{
+            #save(corres,annotationList,cluster,shownames,file = "test_cor.rda")
+            #pheatmap(corres,annotation=annotationList,border_color = NA,
+            #         cluster_rows=cluster,cluster_cols = cluster,
+            #         show_colnames = shownames,show_rownames=shownames,...)
+            if(is.null(classCol)){
+                ha <- HeatmapAnnotation(df=annotationList,show_annotation_name=TRUE,
+                                        annotation_legend_param=list(Batch=list( 
+                                            ncol=ceiling(length(unique(annotationList$Batch))/6))))
+            }else{
+                col_class <- classCol$col
+                names(col_class) <- classCol$class
+                col_batch <- metaColors(length(unique(annotationList$Batch)))
+                names(col_batch) <- sort(unique(annotationList$Batch))
+                ha <- HeatmapAnnotation(df=annotationList,show_annotation_name=TRUE,
+                                        annotation_legend_param=list(Batch=list( 
+                                            ncol=ceiling(length(unique(annotationList$Batch))/6))),
+                                        col=list(Class=col_class,Batch=col_batch))
+            }
+            
+            hp1 <- Heatmap(corres,cluster_rows = cluster, cluster_columns = cluster,
+                    show_column_names = shownames,show_row_names = shownames,
+                    top_annotation = ha,name = "Correlation",...)
+            draw(hp1,merge_legends = TRUE)
+        }
         dev.off()
         
         png(figpng,width = width,height = height,units = "in",res = 120)
-        pheatmap(corres,annotation=annotationList,border_color = NA,
-                 cluster_rows=cluster,cluster_cols = cluster,
-                 show_colnames = shownames,show_rownames=shownames,...)
+        if(!is.null(colorRange)){
+            breaksList <- seq(colorRange[1],colorRange[2],length.out = 30)
+            
+            color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(length(breaksList))
+            
+            pheatmap(corres,annotation=annotationList,border_color = NA,
+                     cluster_rows=cluster,cluster_cols = cluster, color = color, breaks = breaksList,
+                     show_colnames = shownames,show_rownames=shownames,...)
+        }else{
+            #pheatmap(corres,annotation=annotationList,border_color = NA,
+            #         cluster_rows=cluster,cluster_cols = cluster,
+            #         show_colnames = shownames,show_rownames=shownames,...)
+            draw(hp1,merge_legends = TRUE)
+            
+        }
         dev.off()
-        
+
     }
     res <- list(fig=figpng,highfig=figpdf)
     return(res)
+}
+
+metaColors <- function(g){
+    d <- 360/g
+    h <- cumsum(c(15, rep(d,g - 1)))
+    hcl(h = h, c = 100, l = 65)
 }
