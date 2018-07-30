@@ -2031,14 +2031,14 @@ setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,o
     
 })
 
-##' @title reSetPeaksData
-##' @description reSetPeaksData
+##' @title reSetPeaksData. Please note NA is converted to zero in default.
+##' @description reSetPeaksData. Please note NA is converted to zero in default.
 ##' @rdname reSetPeaksData
 ##' @docType methods
 ##' @param para An object of \code{metaXpara}
 ##' @return none
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -2049,20 +2049,28 @@ setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,o
 setGeneric("reSetPeaksData",function(para) standardGeneric("reSetPeaksData"))
 ##' @describeIn reSetPeaksData
 setMethod("reSetPeaksData", signature(para = "metaXpara"), function(para){
-    
+    cat("Reset data!\n")
     rawPeaks <- para@rawPeaks
-    samList  <- read.delim(para@sampleListFile)
+    # samList  <- read.delim(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        samList  <- para@sampleList
+    }
+    
     row.names(rawPeaks) <- rawPeaks$name
     rawPeaks <- rawPeaks[,names(rawPeaks) %in% samList$sample]  
     rawPeaks$ID <- row.names(rawPeaks)
     peaksData <- melt(rawPeaks,id.vars = "ID",variable.name = "sample")
     peaksData <- plyr::join(peaksData,samList,by="sample")
+    message("Convert NA to 0:",sum(is.na(peaksData$value)))
+    peaksData$value[is.na(peaksData$value)] <- 0
     para@peaksData <- peaksData
     
     return(para)
     
 })
-
 
 
 
