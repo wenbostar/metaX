@@ -3,7 +3,7 @@
 
 [![Join the chat at https://gitter.im/metaX-metabolomics/Lobby](https://badges.gitter.im/metaX-metabolomics/Lobby.svg)](https://gitter.im/metaX-metabolomics/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-<img src="https://github.com/wenbostar/metaX/blob/master/inst/extdata/metaX_pipeline.PNG" width=800 class="center">
+[<img src="https://github.com/wenbostar/metaX/blob/master/inst/extdata/metaX_pipeline.PNG" width=800 class="center">](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1579-y)
 
 ## Installation
 
