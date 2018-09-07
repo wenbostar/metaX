@@ -5,8 +5,7 @@ Version: 1.4.19
 Date: 2015-02-10
 Author: Bo Wen <wenbostar@gmail.com>
 Maintainer: Bo Wen <wenbostar@gmail.com>
-Description: The package provides a integrated pipeline for mass spectrometry-
-    based metabolomic data analysis. It includes the stages peak detection, data
+Description: The package provides an integrated pipeline for metabolomic data analysis. It includes the stages peak detection, data
     preprocessing, normalization, missing value imputation, univariate statistical
     analysis, multivariate statistical analysis such as PCA and PLS-DA, metabolite
     identification, pathway analysis, power analysis, feature selection and
