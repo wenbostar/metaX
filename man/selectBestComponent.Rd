@@ -48,6 +48,5 @@ para <- missingValueImpute(para)
 selectBestComponent(para,np=10,sample=c("S","C"),scale="uv",valueID="value")
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

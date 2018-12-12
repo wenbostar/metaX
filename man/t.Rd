@@ -23,6 +23,5 @@ para <- new("plsDAPara")
 t(para) <- 1
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

@@ -26,4 +26,6 @@ res <- pathwayAnalysis(id=c("HMDB00060","HMDB00056","HMDB00064"),
 head(res)
 }
 }
-
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

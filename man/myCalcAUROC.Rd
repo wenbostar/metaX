@@ -36,4 +36,3 @@ addValueNorm(para) <- para
 res <- myCalcAUROC(para,cgroup=c("S","C"))
 }
 }
-

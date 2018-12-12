@@ -5,13 +5,16 @@
 \alias{filterPeaks}
 \title{filterPeaks}
 \usage{
-filterPeaks(para, ratio = 0.8, omit.negative = TRUE, ...)
+filterPeaks(para, ratio = 0.8, byBatch = FALSE, omit.negative = TRUE,
+  ...)
 }
 \arguments{
 \item{para}{An object of metaXpara}
 
 \item{ratio}{filter peaks which have missing value more than percent of 
 "ratio", default is 0.8}
+
+\item{byBatch}{filter peaks by batch}
 
 \item{omit.negative}{A logical value indicates whether omit the negative 
 value}
@@ -34,6 +37,5 @@ para <- reSetPeaksData(para)
 p <- filterPeaks(para,ratio=0.2)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

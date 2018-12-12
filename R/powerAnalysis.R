@@ -10,7 +10,7 @@
 ##' @param fdr The FDR threshold
 ##' @param showPlot Whether or not to print the figure to screen
 ##' @return An value
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' \dontrun{ 

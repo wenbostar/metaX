@@ -60,7 +60,7 @@
 ##' @slot retcor.profStep See \code{\link{retcor.obiwarp}}
 ##' @slot retcor.plottype See \code{\link{retcor.obiwarp}}
 ##' @slot qcRlscSpan The value of span for QC-RLSC
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @return A object of metaXpara
 setClass("metaXpara", slots=c(
     ## input
@@ -198,11 +198,27 @@ prototype = prototype(xcmsSet.method = "centWave",
 
 ## show function for metaXpara
 setMethod("show","metaXpara",function(object){
-    samList <- read.delim(object@sampleListFile)
+    #samList <- read.delim(object@sampleListFile)
+    
+    if(is.null(object@sampleList) || is.na(object@sampleList) ||
+       nrow(object@sampleList) ==0){
+        samList  <- read.delim(object@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        samList  <- object@sampleList
+    }
+    
     message("total samples:")
     message(nrow(samList))
+    
+    message("total features:")
+    if(!is.null(object@peaksData)){
+        message(length(unique(object@peaksData$ID)))
+    }
+    
     samList$class <- as.character(samList$class)
-    samList$class[is.na(samList$class)] <- "QC"
+    if(any(is.na(samList$class))){
+        samList$class[is.na(samList$class)] <- "QC"
+    }
     message("sample group information:")
     sl <- as.data.frame(table(samList$class,useNA = "ifany"))
     names(sl) <- c("Group","Number of samples")
@@ -233,7 +249,7 @@ setMethod("initialize", "metaXpara", function(.Object, ...) {
 ##' @export
 ##' @param para A oplsDAPara object
 ##' @param value New value
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @slot scale The method used to scale the data, 
 ##' see \code{\link{preProcess}} in \pkg{metaX}
 ##' @slot center A logical which indicates if the matrix should be mean 
@@ -278,7 +294,7 @@ setClass("plsDAPara", slots=c(
 ##' @export
 ##' @param para A oplsDAPara object
 ##' @param value New value
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @slot scale The method used to scale the data, 
 ##' see \code{\link{preProcess}} in \pkg{metaX}
 ##' @slot center A logical which indicates if the matrix should be mean 
@@ -317,7 +333,7 @@ setClass("oplsDAPara", slots=c(
 ##' @docType methods
 ##' @param para A metaXpara object
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @return NULL
 ##' @examples
@@ -343,7 +359,7 @@ setMethod("makeDirectory", signature(para = "metaXpara"), function(para){
 ##' @param para A metaXpara object
 ##' @param ... Additional parameter
 ##' @return A metaXpara object
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' \dontrun{
@@ -494,7 +510,7 @@ setMethod("peakFinder", signature(para = "metaXpara"), function(para,...){
 ##' @docType methods
 ##' @param para A metaXpara object.
 ##' @param method The normalization method: sum, vsn, quantiles, 
-##' quantiles.robust, sum, pqn, combat. Default is sum.
+##' quantiles.robust, sum, pqn, combat and tmm. Default is sum.
 ##' @param valueID The name of the column which will be normalized.
 ##' @param norFactor The factor that will be used for normalization. This is 
 ##' usually used in urine data normalization. The factor is the column name in 
@@ -502,9 +518,11 @@ setMethod("peakFinder", signature(para = "metaXpara"), function(para,...){
 ##' value "osmolality". Default the value is NULL. Only if the value of 
 ##' norFactor is not NULL and the parameter "method" is NULL, this 
 ##' normalization will work.
+##' @param useClass Whether or not to use class information when perform 
+##' batch correction using ComBat method. Default is False.
 ##' @param ... Additional parameter
 ##' @return A metaXpara object.
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -521,12 +539,14 @@ setMethod("peakFinder", signature(para = "metaXpara"), function(para,...){
 ##' para <- reSetPeaksData(para)
 ##' para <- metaX::normalize(para)
 setGeneric("normalize",function(para,method="sum",valueID="value",
-                                norFactor=NULL,...) 
+                                norFactor=NULL,useClass=FALSE,...) 
     standardGeneric("normalize"))
 ##' @describeIn normalize
 setMethod("normalize",signature(para="metaXpara"),
-          function(para,method="sum",valueID="value",norFactor=NULL,...){
+          function(para,method="sum",valueID="value",norFactor=NULL,useClass=FALSE,...){
               message("normalize: ",valueID)
+              
+              cat("Normalization method: ", method, "\n")
               #para@peaksData->x
               #x<-dcast(x,ID~sample,value.var = valueID)
               x <- para@peaksData %>% 
@@ -562,7 +582,7 @@ setMethod("normalize",signature(para="metaXpara"),
                       x[,i] <- x[,i]/coe[i-1]
                   }
                   x[,-1] <- x[,-1] * mean(apply(dat,2,function(x){sum(x,na.rm=TRUE)}))
-                  save(x,file="x.rda")
+                  #save(x,file="x.rda")
               }else if(!is.null(method) && method == "combat"){
                   ## The ComBat function adjusts for known batches using an 
                   ## empirical Bayesian framework
@@ -570,17 +590,49 @@ setMethod("normalize",signature(para="metaXpara"),
                   message("normalization: ComBat\n")
                   sample_meta <- data.frame(sample=names(x)[-1],
                                             stringsAsFactors = FALSE)
-                  samList <- read.delim(para@sampleListFile,stringsAsFactors=FALSE)
+                  # samList <- read.delim(para@sampleListFile,stringsAsFactors=FALSE)
+                  
+                  if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                     nrow(para@sampleList) ==0){
+                      samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+                  }else{
+                      samList  <- para@sampleList
+                  }
+                  samList$class <- as.character(samList$class)
+                  samList$class[is.na(samList$class)] <- "QC"
+                  
                   m <- left_join(sample_meta,samList,by="sample")
+                  
                   dat_batch <- m$batch
-                  modcombat = model.matrix(~1, data=m)
+                  
+                  if(useClass==TRUE){
+                      modcombat = model.matrix(~as.factor(class), data=m)
+                  }else{
+                      modcombat = model.matrix(~1, data=m)  
+                  }
+                  ## log2 transformation
+                  # dat <- dat[dat<=0] <- NA
+                  #save(dat,dat_batch,modcombat,file="combat.rda")
+                  dat <- log2(dat)
                   x_tmp = ComBat(dat=dat, batch=dat_batch, mod=modcombat, 
                                   par.prior=TRUE, 
                                   prior.plot=FALSE)
+                  x_tmp <- 2^x_tmp
                   message("<=0:",sum(x_tmp<=0),"/",length(x_tmp),"\n")
-                  x_tmp[x_tmp<=0] <- NA
+                  # x_tmp[x_tmp<=0] <- NA
+                  x_tmp[x_tmp<=0] <- 0
                   x[,-1] <- x_tmp
-                  
+            
+              }else if(!is.null(method) && method == "tmm"){
+                  dat[is.na(dat)] <- 0
+                  dlist <- DGEList(counts = dat)
+                  dlist <- calcNormFactors(dlist,method = "TMM")
+                  dat <- cpm(dlist)
+                  # dat[dat<=0] <- NA
+                  dat[dat<=0] <- 0
+                  x[,-1] <- dat
+              }else if(!is.null(method) && method == "median"){
+                  x[,-1] <- apply(dat,2,function(x){x/median(x,na.rm=TRUE)})
               }else if(is.null(method) && !is.null(norFactor)){
                   message("Normalization by ",norFactor)
                   if(norFactor %in% names(para@peaksData)){
@@ -614,7 +666,7 @@ setMethod("normalize",signature(para="metaXpara"),
 ##' @param ntop Default is top 5 correlated peaks
 ##' @param impute Whether do the imputation before and after normalization
 ##' @param cpu The number of cpu used, default is 0 which means using all cpu.
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @return A new object of metaXpara
 ##' @references X. Shen, X. Gong, Y. Cai, Y. Guo, J. Tu, H. Li, T.Zhang, 
 ##' J. Wang, F. Xue, and Z.-J. Zhu, Normalization and 
@@ -636,7 +688,14 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     
     qcData <- peaksData[is.na(peaksData$class),]
     sampleData <- peaksData[!is.na(peaksData$class),]
-    samList <- read.delim(para@sampleListFile,stringsAsFactors=FALSE)
+    # samList <- read.delim(para@sampleListFile,stringsAsFactors=FALSE)
+    
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        samList  <- para@sampleList
+    }
     
     assign(x="maxOrder",value=max(samList[,para@sampleListHead['order']]),
            envir=.GlobalEnv)
@@ -698,11 +757,14 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     ## head: sample       ID     value batch class order valuePredict
     peaksData$valuePredict <- NULL
     peaksData$valueNorm <- NULL
-    peaksData <- plyr::join(peaksData,intPredict,
+    #peaksData <- plyr::join(peaksData,intPredict,
+    peaksData <- inner_join(peaksData,intPredict,
                             by=intersect(names(peaksData),names(intPredict)))
     
-    mpa <- ddply(peaksData,.(ID),summarise,mpa=median(value,na.rm = TRUE))
-    peaksData <- plyr::join(peaksData,mpa,
+    #mpa <- ddply(peaksData,.(ID),summarise,mpa=median(value,na.rm = TRUE))
+    mpa <- peaksData %>% group_by(ID) %>% summarise(mpa=median(value,na.rm = TRUE))
+    #peaksData <- plyr::join(peaksData,mpa,
+    peaksData <- inner_join(peaksData,mpa,
                             by=intersect(names(peaksData),names(mpa)))
     peaksData <- dplyr::mutate(peaksData,valuePredict=valuePredict/mpa)
     peaksData$mpa <- NULL
@@ -730,10 +792,14 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     }
     ## For each batch
     ## CV plot
-    cvStat <- ddply(peaksData[is.na(peaksData$class),],.(ID,batch),
-                    summarise,
-                    rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
-                    normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
+    #cvStat <- ddply(peaksData[is.na(peaksData$class),],.(ID,batch),
+    #                summarise,
+    #                rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
+    #                normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
+    
+    cvStat <- peaksData[is.na(peaksData$class),] %>% group_by(ID,batch) %>%
+                    summarise(rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
+                              normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
     
     
     cvStatForEachBatch <- melt(cvStat,id.vars = c("ID","batch"),
@@ -742,9 +808,16 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     
     ## output information
     message("Summary information of the CV for QC samples:")
-    cvTable <- ddply(cvStatForEachBatch,.(batch,CV),summarise,
-                     lessThan30=sum(value<=0.3,na.rm = TRUE),
-                     total=length(value),ratio=lessThan30/total)
+    #cvTable <- ddply(cvStatForEachBatch,.(batch,CV),summarise,
+    #                 lessThan30=sum(value<=0.3,na.rm = TRUE),
+    #                 total=length(value),ratio=lessThan30/total)
+    
+    cvTable <- cvStatForEachBatch %>% group_by(batch,CV) %>% 
+                     summarise(lessThan30=sum(value<=0.3,na.rm = TRUE),
+                               total=length(value),
+                               ratio=lessThan30/total)
+    
+    
     print(cvTable)
     res$cvBatch <- cvTable
     message("\n")
@@ -765,19 +838,27 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     
     #######################################
     ## For all
-    cvStat <- ddply(peaksData[is.na(peaksData$class),],.(ID),
-                    summarise,
-                    rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
-                    normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
+    #cvStat <- ddply(peaksData[is.na(peaksData$class),],.(ID),
+    #                summarise,
+    #                rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
+    #                normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
+    
+    cvStat <- peaksData[is.na(peaksData$class),] %>% group_by(ID) %>%
+                    summarise(rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
+                              normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
     
     
     cvStatForAll <- melt(cvStat,id.vars = c("ID"),
                          variable.name = "CV")
     ## output information
     message("Summary information of the CV for QC samples:")
-    cvTable <- ddply(cvStatForAll,.(CV),summarise,
-                     lessThan30=sum(value<=0.3,na.rm = TRUE),
-                     total=length(value),ratio=lessThan30/total)
+    #cvTable <- ddply(cvStatForAll,.(CV),summarise,
+    #                 lessThan30=sum(value<=0.3,na.rm = TRUE),
+    #                 total=length(value),ratio=lessThan30/total)
+    
+    cvTable <- cvStatForAll %>% group_by(CV) %>% 
+        summarise(lessThan30=sum(value<=0.3,na.rm = TRUE),
+                  total=length(value),ratio=lessThan30/total)
     print(cvTable)
     res$cvAll <- cvTable
     message("\n")
@@ -983,7 +1064,7 @@ svmRadialfit=function(id,qcData,maxOrder,repeats=10,
 ##' @param center Centering, see \code{\link{pca}} in \pkg{pcaMethods}
 ##' @param ... Additional parameter
 ##' @return The name of outlier samples
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' para <- new("metaXpara")
@@ -1006,8 +1087,14 @@ setMethod("autoRemoveOutlier", signature(para = "metaXpara"),
               out.tol <- outTol
               prefix <- para@prefix
               outdir <- para@outdir 
-              sampleList  <- read.delim(para@sampleListFile)
+              # sampleList  <- read.delim(para@sampleListFile)
               
+              if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                 nrow(para@sampleList) ==0){
+                  sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+              }else{
+                  sampleList  <- para@sampleList
+              }
               
               ## Removal of outliers :performs automated removal of outliers in the
               ## pre-processed data based on expansion of the Hotellings T2 
@@ -1197,7 +1284,7 @@ setMethod("autoRemoveOutlier", signature(para = "metaXpara"),
 ##' @param prefix The prefix of output file
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' para <- new("metaXpara")
@@ -1225,7 +1312,15 @@ setMethod("makeMetaboAnalystInput", signature(para = "metaXpara"),
               metaboAnalystInput <- paste(para@outdir,"/",prefix,
                                           "-metaboAnalystInput.csv",sep="")
               
-              samList  <- read.delim(para@sampleListFile)
+              # samList  <- read.delim(para@sampleListFile)
+              
+              if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                 nrow(para@sampleList) ==0){
+                  samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+              }else{
+                  samList  <- para@sampleList
+              }
+              
               if(zero2NA){
                   para <- zero2NA(para,valueID=valueID)
               }
@@ -1266,7 +1361,7 @@ setMethod("makeMetaboAnalystInput", signature(para = "metaXpara"),
 ##' disk for debug. Only useful for developer. Default is TRUE.
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @return An object of \code{metaXpara}
 ##' @examples
@@ -1295,8 +1390,8 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
               }
               
               ## output fig 
-              outFig <- paste(para@outdir,"/",para@prefix,"-peakStat.pdf",sep="")
-              pdf(file = outFig,width = 5,height = 5)
+              #outFig <- paste(para@outdir,"/",para@prefix,"-peakStat.pdf",sep="")
+              #pdf(file = outFig,width = 5,height = 5)
               
               assign(x="plsdaPara",value=plsdaPara,envir=.GlobalEnv)
               
@@ -1360,7 +1455,9 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                       ylab("-Log10(P-value)")+
                       ggtitle(paste(rp," t.test with FDR correct"))+
                       theme(legend.position="none")
+                  png(filename = paste(para@outdir,"/",para@prefix,"-ttest-FDR-",sub(pattern = ":",replacement = "_",x = rp),".png",sep=""),width = 600,height = 600,res = 120)
                   print(ggobj)
+                  dev.off()
                   
                   ## t.test
                   plotdata <- data.frame(x=statTest$ratio,
@@ -1375,7 +1472,9 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                       ylab("-Log10(P-value)")+
                       ggtitle(paste(rp," t.test"))+
                       theme(legend.position="none")
+                  png(filename = paste(para@outdir,"/",para@prefix,"-ttest-",sub(pattern = ":",replacement = "_",x = rp),".png",sep=""),width = 600,height = 600,res = 120)
                   print(ggobj)
+                  dev.off()
                   
                   ## histogram of log2(ratio)
                   ggobj <- ggplot(data=plotdata,aes(x=log2(x)))+
@@ -1387,7 +1486,9 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                                     args=list(mean=mean(log2(plotdata$x)),
                                               sd=sd(log2(plotdata$x))))+
                       geom_vline(xintercept=0,size=1.1,colour="#D55E00")
+                  png(filename = paste(para@outdir,"/",para@prefix,"-log2ratio-hist-",sub(pattern = ":",replacement = "_",x = rp),".png",sep=""),width = 600,height = 600,res = 120)
                   print(ggobj)
+                  dev.off()
                   
                   ## wilcox.test with fdr correct
                   plotdata <- data.frame(x=statTest$ratio,
@@ -1403,7 +1504,10 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                       ylab("-Log10(P-value)")+
                       ggtitle(paste(rp," wilcox.test with FDR correct"))+
                       theme(legend.position="none")
+                  
+                  png(filename = paste(para@outdir,"/",para@prefix,"-wilcox-FDR-",sub(pattern = ":",replacement = "_",x = rp),".png",sep=""),width = 600,height = 600,res = 120)
                   print(ggobj)
+                  dev.off()
                   
                   ## wilcox.test
                   plotdata <- data.frame(x=statTest$ratio,
@@ -1419,7 +1523,9 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                       ylab("-Log10(P-value)")+
                       ggtitle(paste(rp," wilcox.test"))+
                       theme(legend.position="none")
+                  png(filename = paste(para@outdir,"/",para@prefix,"-wilcox-",sub(pattern = ":",replacement = "_",x = rp),".png",sep=""),width = 600,height = 600,res = 120)
                   print(ggobj)
+                  dev.off()
                   
                   
                   if(plsdaPara@do==TRUE){
@@ -1455,10 +1561,11 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                   ppca@prefix <- paste(cgroup,collapse = "_")
                   ppca@prefix <- paste(para@prefix,"-",ppca@prefix,sep="")
                   fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = TRUE,
-                                        rmQC = FALSE,label = pcaLabel)
+                                        rmQC = FALSE,label = pcaLabel,...)
                   ## no QC, no batch
+                  ppca@prefix <- paste(ppca@prefix,"-nomatch-noqc",sep="")
                   fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = FALSE,
-                                        rmQC = TRUE,label = pcaLabel)
+                                        rmQC = TRUE,label = pcaLabel,...)
                   
                   
                   ## The venn plot of significant metabolites defined by different methods
@@ -1514,7 +1621,7 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
               write.table(para@quant,file = outFile,
                           col.names = TRUE,
                           row.names = FALSE,quote=FALSE,sep="\t")
-              dev.off()
+              #dev.off()
               return(para)
               
           })
@@ -1528,7 +1635,7 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
 ##' @param para A \code{metaXpara} object
 ##' @param maxf The number of features to plot
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @seealso \code{\link{doQCRLSC}}
 ##' @exportMethod
 ##' @examples
@@ -1603,14 +1710,33 @@ setMethod("plotQCRLSC", signature(para = "metaXpara"), function(para,maxf=100){
 ##' @param valueID The name of the column which will be used
 ##' @param scale Scaling, see \code{\link{pca}} in \pkg{pcaMethods}
 ##' @param center Centering, see \code{\link{pca}} in \pkg{pcaMethods}
-##' @param label The label used for plot PCA figure, default is "order"
+##' @param label The label used for plot PCA figure, default is "order".
+##' This value can be "order" or "sample". If the value of this parameter
+##' is NA or NULL, then no label will be shown for each point.
+##' @param pointLabel The labels for each point, default is NULL. When users 
+##' want to highlight some samples, this parameter is useful.
+##' @param pointSize The size of the point, default is 1.4
+##' @param labelSize The size of the label, default is 4
 ##' @param rmQC A logical indicates whether remove QC data
 ##' @param batch A logical indicates whether output batch information
 ##' @param saveRds Boolean, setting the argument to TRUE to save some objects to
 ##' disk for debug. Only useful for developer. Default is TRUE.
+##' @param legendRowBatch Specify the number of column of legend for batch. 
+##' Default is NULL and use the default setting.
+##' @param legendRowClass Specify the number of column of legend for group.
+##' Default is NULL and use the default setting.
+##' @param showCircle Whether or not to show circle for each class, default is TRUE.
+##' @param showClass Whether or not to show class information, default is TRUE.
+##' This parameter is useful when users want to check the batch effect.
+##' @param classColor A data frame for color setting of class
+##' @param pdfWidth Width for PDF, default is 4.38
+##' @param pdfHeight Height for PDF, default is 3.7
+##' @param pngWidth Width for PNG, default is 4 inch
+##' @param pngHeight Height for PNG, default is 4.2 inch
+##' @param res resolution for PNG, default is 120
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' para <- new("metaXpara")
@@ -1623,14 +1749,26 @@ setMethod("plotQCRLSC", signature(para = "metaXpara"), function(para,maxf=100){
 ##' para <- transformation(para,valueID = "value")
 ##' metaX::plotPCA(para,valueID="value",scale="uv",center=TRUE)
 setGeneric("plotPCA",function(para,pcaMethod="svdImpute",valueID="valueNorm",
-                              label="order",rmQC=TRUE,batch=FALSE,
-                              scale="none",center=FALSE,saveRds=TRUE,...) 
+                              label="order",pointLabel=NULL,pointSize=1.4,labelSize=4,rmQC=TRUE,
+                              batch=FALSE,showCircle=TRUE,showClass=TRUE,
+                              scale="none",center=FALSE,saveRds=TRUE,
+                              legendRowBatch = NULL, legendRowClass = NULL,
+                              legendPosition="top",
+                              classColor = NULL,
+                              pdfWidth = 4.38,pdfHeight = 3.7,
+                              pngWidth = 4,pngHeight = 4.2, res = 120,...)
     standardGeneric("plotPCA"))
 ##' @describeIn plotPCA
 setMethod("plotPCA", signature(para = "metaXpara"), 
           function(para,pcaMethod="svdImpute",valueID="valueNorm",
-                   label="order",rmQC=TRUE,batch=FALSE,
-                   scale="none",center=FALSE,saveRds=TRUE,...){
+                   label="order",pointLabel=NULL,pointSize=1.4,labelSize=4,rmQC=TRUE,batch=FALSE,
+                   showCircle=TRUE,showClass=TRUE,
+                   scale="none",center=FALSE,saveRds=TRUE,legendRowBatch = NULL,
+                   legendRowClass = NULL,
+                   legendPosition="top",
+                   classColor = NULL,
+                   pdfWidth = 4.38,pdfHeight = 3.7,
+                   pngWidth = 4.5,pngHeight = 4.1, res = 120,...){
               
               message("plot PCA for value '",valueID,"'")
               
@@ -1640,9 +1778,13 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               fig <- paste(para@outdir,"/",para@prefix,"-PCA.png",sep="")
               highfig <- sub(pattern = "png$",replacement = "pdf",x = fig)
               
-              pdf(file = highfig,width = 4.38,height = 3.7)
+              if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                 nrow(para@sampleList) ==0){
+                  sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+              }else{
+                  sampleList  <- para@sampleList
+              }
               
-              sampleList  <- read.delim(para@sampleListFile)
               
               x <- para@peaksData
               x$class <- as.character(x$class)
@@ -1657,6 +1799,8 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               row.names(x) <- x$ID
               x$ID <- NULL
               
+              cat("scaling in PCA:",scale,"\n")
+              cat("centering in PCA:",center,"\n")
               pca.res <- pca(t(x), nPcs = 3, method=pcaMethod,cv="q2",
                              scale=scale,center=center,seed=123,...)
               row.names(pca.res@loadings) <- row.names(x)
@@ -1671,10 +1815,12 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               plotData <- data.frame(x=pca.res@scores[,1],
                                      y=pca.res@scores[,2],
                                      z=pca.res@scores[,3],
-                                     sample=names(x))
+                                     sample=names(x),stringsAsFactors=FALSE)
               plotData <- merge(plotData,sampleList,by="sample",sort=FALSE)
               plotData$class <- as.character(plotData$class)
               plotData$class[is.na(plotData$class)] <- "QC" 
+              
+              
               
               ## Only work for the dataset which has batch design
               ## Calculate the the Bhattacharyya distance of different batch
@@ -1717,11 +1863,37 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               
               
               if(batch==TRUE){
-                  plotData$batch <- as.character(plotData$batch)
+                  plotData$batch <- factor(as.character(plotData$batch),
+                                           levels = as.character(sort(unique(plotData$batch))))
               }
               
-              ggobj <-ggplot(data = plotData,aes(x=x,y=y,colour=class))+
-                  geom_hline(yintercept=0,colour="gray")+
+              if(!is.null(pointLabel)){
+                  if(!is.null(label) && !is.na(label) && label == "order"){
+                      plotData$order[!(plotData$order %in% pointLabel)] <- ""
+                  }else if(!is.null(label) && !is.na(label) && label == "sample"){
+                      # cat("Yes\n")
+                      plotData$sample[!(plotData$sample %in% pointLabel)] <- ""
+                  }
+              }
+              
+              #save(plotData,file="plotdata.rda")
+              if(showClass==TRUE){
+                  if(is.null(classColor)){
+                      ggobj <- ggplot(data = plotData,aes(x=x,y=y,colour=class))
+                  }else{
+                      cat("Use user defined color for point!\n")
+                      #save(plotData,classColor,file = "test.rda")
+                      classColor$class <- as.character(classColor$class)
+                      classColor$class <- factor(classColor$class,levels = classColor$class)
+                      plotData$class <- factor(plotData$class,levels = classColor$class)
+                      ggobj <- ggplot(data = plotData,aes(x=x,y=y,colour=class)) +
+                          scale_color_manual(breaks = classColor$class,
+                                             values = classColor$col)
+                  }
+              }else{
+                  ggobj <- ggplot(data = plotData,aes(x=x,y=y))
+              }
+              ggobj <- ggobj + geom_hline(yintercept=0,colour="gray")+
                   geom_vline(xintercept=0,colour="gray")+
                   #geom_point()+
                   xlab(paste("PC1"," (",sprintf("%.2f%%",100*pca.res@R2[1]),") ",sep=""))+
@@ -1729,27 +1901,44 @@ setMethod("plotPCA", signature(para = "metaXpara"),
                   theme_bw()+
                   theme(#legend.justification=c(1,1), 
                       #legend.position=c(1,1),
-                      legend.position="top",
+                      legend.position = legendPosition,
                       panel.grid.major = element_blank(), 
-                      panel.grid.minor = element_blank())+
+                      panel.grid.minor = element_blank())
                       #panel.background=element_rect(fill="#E3E3EE"))+
                   #theme(legend.direction = 'horizontal', legend.position = 'top')+
                   #stat_ellipse(geom = "polygon", type="euclid",alpha = 0.4, 
                   #             aes(fill = class))+
-                  stat_ellipse(geom = "path")
+             
+              if(showCircle==TRUE){
+                  ggobj <- ggobj + stat_ellipse(geom = "path")
+              }
               
-              if(label == "order"){
-                  ggobj <- ggobj + geom_text(aes(label=order),size=4,hjust=-0.2)
-              }else if(label == "sample"){
-                  ggobj <- ggobj + geom_text(aes(label=sample),size=4,hjust=-0.2)
+              if(!is.null(label) && !is.na(label) && label == "order"){
+                  ggobj <- ggobj + geom_text(aes(label=order),size=labelSize,hjust=-0.2)
+              }else if(!is.null(label) && !is.na(label) && label == "sample"){
+                  ggobj <- ggobj + geom_text(aes(label=sample),size=labelSize,hjust=-0.2)
               }
               if(batch==TRUE){
-                  ggobj <- ggobj + geom_point(aes(shape=batch))+
+                  ggobj <- ggobj + geom_point(aes(shape=batch),size=pointSize)+
                       scale_shape_manual(values=1:n_distinct(plotData$batch))
               }else{
-                  ggobj <- ggobj + geom_point()
+                  ggobj <- ggobj + geom_point(size=pointSize)
               }
               
+              if(!is.null(legendRowBatch)){
+                  ggobj <- ggobj + guides(shape = guide_legend(nrow = legendRowBatch))    
+                  
+              }
+              
+              if(showClass==TRUE){
+                  if(!is.null(legendRowClass)){
+                      ggobj <- ggobj + guides(col = guide_legend(nrow = legendRowClass))    
+                      
+                  }
+              }
+              
+              
+              pdf(file = highfig,width = pdfWidth,height = pdfHeight)
               
               print(ggobj)
               
@@ -1780,7 +1969,7 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               
               dev.off()
               
-              png(filename = fig,width = 4,height = 4.2,res = 120,units = "in")
+              png(filename = fig,width = pngWidth,height = pngHeight,res = res,units = "in")
               print(ggobj)
               dev.off()
               res <- list(fig=fig,highfig=highfig,pca=pca.res)
@@ -1799,7 +1988,7 @@ setMethod("plotPCA", signature(para = "metaXpara"),
 ##' @param ncomp The number of components used for PLS-DA
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' para <- new("metaXpara")
@@ -1825,7 +2014,14 @@ setMethod("plotPLSDA", signature(para = "metaXpara"),
               fig <- paste(para@outdir,"/",para@prefix,"-PLSDA.pdf",sep="")
               pdf(file = fig,width = 6,height = 6)
               
-              sampleList  <- read.delim(para@sampleListFile)
+              # sampleList  <- read.delim(para@sampleListFile)
+              
+              if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                 nrow(para@sampleList) ==0){
+                  sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+              }else{
+                  sampleList  <- para@sampleList
+              }
               
               peaksData <- para@peaksData
               peaksData <- peaksData[!is.na(peaksData$class),]
@@ -1884,10 +2080,12 @@ setMethod("plotPLSDA", signature(para = "metaXpara"),
                   #             aes(fill = class))+
                   stat_ellipse(geom = "path")
               
-              if(label == "order"){
-                  ggobj <- ggobj + geom_text(aes(label=order),size=4,hjust=-0.2)
-              }else if(label == "sample"){
-                  ggobj <- ggobj + geom_text(aes(label=sample),size=4,hjust=-0.2)
+              if(!is.null(label) && !is.na(label)){
+                  if(label == "order"){
+                    ggobj <- ggobj + geom_text(aes(label=order),size=4,hjust=-0.2)
+                  }else if(label == "sample"){
+                    ggobj <- ggobj + geom_text(aes(label=sample),size=4,hjust=-0.2)
+                  }
               }
               
               print(ggobj)
@@ -1937,7 +2135,7 @@ setMethod("plotPLSDA", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -1988,13 +2186,14 @@ setMethod("filterQCPeaks", signature(para = "metaXpara"),
 ##' @param para An object of metaXpara
 ##' @param ratio filter peaks which have missing value more than percent of 
 ##' "ratio", default is 0.8
+##' @param byBatch filter peaks by batch
 ##' @param omit.negative A logical value indicates whether omit the negative 
 ##' value
 ##' @param ... Additional parameters 
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -2003,21 +2202,42 @@ setMethod("filterQCPeaks", signature(para = "metaXpara"),
 ##' sampleListFile(para) <- sfile
 ##' para <- reSetPeaksData(para)
 ##' p <- filterPeaks(para,ratio=0.2)
-setGeneric("filterPeaks",function(para,ratio=0.8,omit.negative=TRUE,...) standardGeneric("filterPeaks"))
+setGeneric("filterPeaks",function(para,ratio=0.8,byBatch=FALSE,omit.negative=TRUE,...) standardGeneric("filterPeaks"))
 ##' @describeIn filterPeaks
-setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,omit.negative=TRUE,...){
+setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,byBatch=FALSE,omit.negative=TRUE,...){
     peaksData <- para@peaksData
     #assign(x="filterRatio",value=ratio,envir=.GlobalEnv)
     filterRatio <- ratio
-    rpeak <- ddply(peaksData[!is.na(peaksData$class),],.(ID),here(summarise),
-                   rp=countMissingValue(value,ratio = filterRatio,omit.negative))
+    # rpeak <- ddply(peaksData[!is.na(peaksData$class),],.(ID),here(summarise),
+    #               rp=countMissingValue(value,ratio = filterRatio,omit.negative))
+    if(byBatch==TRUE){
+        ## filter QC samples firstly
+        cat("filter peaks by batch ...\n")
+        rpeak <- peaksData %>% filter(!is.na(class)) %>% 
+            group_by(ID,batch) %>% 
+            dplyr::summarise(rp=countMissingValue(value,ratio=filterRatio,omit.negative)) %>%
+            ungroup() %>%
+            select(-batch) %>%
+            group_by(ID) %>%
+            dplyr::summarise(rp=any(rp)) %>%
+            ungroup()
+                
+    }else{
+        rpeak <- peaksData %>% filter(!is.na(class)) %>% 
+            group_by(ID) %>% 
+            dplyr::summarise(rp=countMissingValue(value,ratio=filterRatio,omit.negative)) %>%
+            ungroup()
+    }
     
     if(sum(rpeak$rp)!=0){
         para@peaksData <- peaksData[ peaksData$ID %in% rpeak$ID[ !rpeak$rp],]
     }
+    message("Total peaks: ",length(unique(peaksData$ID)))
     message("Remove peaks which the percent is more than ", ratio ,
         " with intensity are NA!")
     message(sum(rpeak$rp))
+    message("Peaks left: ",sum(!rpeak$rp))
+    
     
     ## save the remove peak to file
     if(sum(rpeak$rp) >=1){
@@ -2074,6 +2294,7 @@ setMethod("reSetPeaksData", signature(para = "metaXpara"), function(para){
 
 
 
+
 ##' @title Using the QC samples to do the quality control-robust spline signal 
 ##' correction
 ##' @description Using the QC samples to do the quality control-robust spline 
@@ -2086,7 +2307,7 @@ setMethod("reSetPeaksData", signature(para = "metaXpara"), function(para){
 ##' @param cpu The number of cpu used for processing
 ##' @param ... Additional parameters 
 ##' @return A list object
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @seealso \code{\link{plotQCRLSC}}
 ##' @details 
 ##' The smoothing parameter is optimised using leave-one-out cross validation 
@@ -2120,7 +2341,14 @@ setMethod("doQCRLSC", signature(para = "metaXpara"),
                   sum(is.na(peaksData$value) | peaksData$value <= 0))
               
               qcData <- peaksData[is.na(peaksData$class),]
-              samList <- read.delim(para@sampleListFile,stringsAsFactors=FALSE)
+              # samList <- read.delim(para@sampleListFile,stringsAsFactors=FALSE)
+              
+              if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                 nrow(para@sampleList) ==0){
+                  samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+              }else{
+                  samList  <- para@sampleList
+              }
               
               assign(x="maxOrder",value=max(samList[,para@sampleListHead['order']]),
                      envir=.GlobalEnv)
@@ -2328,12 +2556,12 @@ setMethod("doQCRLSC", signature(para = "metaXpara"),
 ##' @exportMethod
 ##' @param x The value needed to be imputated
 ##' @param valueID The name of the column which will be used
-##' @param method Method for imputation: bpca,knn,svdImpute,rf,min
+##' @param method Method for imputation: bpca,knn,svdImpute,softImpute,rf,min
 ##' @param negValue A logical indicates whether convert <=0 value to NA
 ##' @param cpu The number of cpus used
 ##' @param ... Additional parameters 
 ##' @return The imputation data
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -2354,7 +2582,9 @@ setMethod("missingValueImpute", signature(x = "metaXpara"),
               para <- x
               peaksData <- para@peaksData
               message(date(),"\tMissing value imputation for \'",valueID,"\'")
-              x<-dcast(peaksData,ID~sample,value.var = valueID)
+              x <- peaksData %>% dplyr::select(ID,sample,!!valueID) %>% 
+                  tidyr::spread(sample,!!valueID)
+              #x<-dcast(peaksData,ID~sample,value.var = valueID)
               row.names(x) <- x$ID
               x$ID <- NULL
               x[x<=0] <- NA
@@ -2368,7 +2598,7 @@ setMethod("missingValueImpute", signature(x = "metaXpara"),
                   message("Missing value in non-QC sample: ",
                       sum(sValue<=0 | is.na(sValue)))
               }
-              x <- missingValueImpute(x,method=para@missValueImputeMethod,...)
+              x <- missingValueImpute(x,method=para@missValueImputeMethod,cpu=cpu,...)
               message("Missing value in total after missing value inputation: ",
                   sum(is.na(x)))
               
@@ -2389,10 +2619,17 @@ setMethod("missingValueImpute", signature(x = "metaXpara"),
 ##' @describeIn missingValueImpute
 setMethod("missingValueImpute", signature(x = "data.frame"), 
           function(x,method="knn",negValue = TRUE,cpu=1,...){
+              
+              if(cpu==0){
+                  cpu <- detectCores()
+              }
+              
               inputedData <- NULL
               colName <- names(x)
               rowName <- row.names(x)
               x <- as.matrix(t(x))
+              ## An expression matrix with samples in the rows, features in the columns
+              save(x,file="x.rda")
               message(date(),"\tThe ratio of missing value: ",
                   sprintf("%.4f%%",100*sum(is.na(x))/length(x)))
               if(method == "bpca"){
@@ -2412,6 +2649,13 @@ setMethod("missingValueImpute", signature(x = "data.frame"),
                   ## This method is very fast.
                   mvd <- impute.knn(t(x))
                   inputedData <- t(mvd$data)
+              }else if(method == "softImpute"){
+                  # https://cran.r-project.org/web/packages/softImpute/vignettes/softImpute.html
+                  # An m by n matrix with NAs.
+                  # TODO: tune the parameters, rank.max and lambda
+                  softfit <- softImpute(t(x))
+                  x_new <- complete(x,softfit)
+                  inputedData <- x_new
                   
               }else if(method == "rf"){
                   ## A data matrix with missing values. 
@@ -2420,8 +2664,12 @@ setMethod("missingValueImpute", signature(x = "data.frame"),
                   ## Please note that this method is very time-consuming.
                   
                   if(cpu>1){
+                      cat("do missForest cpu=(",cpu,") ...\n")
                       cl <- makeCluster(cpu)
                       registerDoParallel(cl)
+                      # xmis: a data matrix with missing values. 
+                      # The columns correspond to the variables and the rows 
+                      # to the observations.
                       mvd <- missForest(xmis = x,parallelize = "variables")
                       print(mvd$OOBerror)
                       inputedData <- mvd$ximp
@@ -2429,6 +2677,7 @@ setMethod("missingValueImpute", signature(x = "data.frame"),
                       
                       
                   }else{
+                      cat("do missForest ...\n")
                       mvd <- missForest(xmis = x)
                       print(mvd$OOBerror)
                       inputedData <- mvd$ximp
@@ -2440,18 +2689,24 @@ setMethod("missingValueImpute", signature(x = "data.frame"),
                       y[is.na(y) | y<=0] <- min(y[y>0],na.rm = TRUE)/2.0
                       y})    
                   inputedData <- t(inputedData)
+              }else if(method == "none"){
+                  cat("No missing value imputation!\n")
+                  inputedData <- x
               }else{
                   stop("Please provide valid method for missing value inputation!")
               }
               
-              if(negValue & method != "min"){
-                  message("<=0: ",sum(inputedData<=0))
-                  x <- inputedData 
-                  inputedData <- apply(x,1,function(y){
-                      y[is.na(y) | y<=0] <- min(y[y>0],na.rm = TRUE)
-                      y})    
-                  inputedData <- t(inputedData)
-                  
+              if(method != "none"){
+              
+                  if(negValue & method != "min"){
+                      message("<=0: ",sum(inputedData<=0))
+                      x <- inputedData 
+                      inputedData <- apply(x,1,function(y){
+                          y[is.na(y) | y<=0] <- min(y[y>0],na.rm = TRUE)
+                          y})    
+                      inputedData <- t(inputedData)
+                      
+                  }
               }
               
               inputedData <- as.data.frame(t(inputedData))
@@ -2468,7 +2723,7 @@ setMethod("missingValueImpute", signature(x = "data.frame"),
 ##' @param para An object of data
 ##' @param ... Additional parameters 
 ##' @return A logical value
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -2480,7 +2735,14 @@ setMethod("missingValueImpute", signature(x = "data.frame"),
 setGeneric("hasQC",function(para,...) standardGeneric("hasQC"))
 ##' @describeIn hasQC
 setMethod("hasQC", signature(para = "metaXpara"), function(para,...){
-    samList <- read.delim(para@sampleListFile)
+    # samList <- read.delim(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        samList  <- para@sampleList
+    }
+    
     qc <- is.na(samList$class)
     if(any(qc)){
         message("Find QC samples in your data!")
@@ -2501,7 +2763,7 @@ setMethod("hasQC", signature(para = "metaXpara"), function(para,...){
 ##' @param valueID The name of the column which will be used
 ##' @param ... Additional parameters 
 ##' @return An object of \code{metaXpara}
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' \donttest{
 ##' para <- new("metaXpara")
@@ -2530,9 +2792,12 @@ setMethod("zero2NA", signature(x = "metaXpara"), function(x,valueID="value",...)
 ##' @docType methods
 ##' @param x A metaXpara object.
 ##' @param width The width of pdf, default is 14.
+##' @param sortBy Sort the samples according to order (default), batch or class
+##' @param rmNA Whether or not to consider NA, default is TRUE. When this value is FALSE,
+##' NA will be considered as 0 then all values are +1.
 ##' @param ... Additional parameter
 ##' @return The figure name
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -2551,26 +2816,39 @@ setMethod("zero2NA", signature(x = "metaXpara"), function(x,valueID="value",...)
 ##' ## after normalization
 ##' para <- metaX::normalize(para)
 ##' plotIntDistr(para)
-setGeneric("plotIntDistr",function(x,width=14,...) standardGeneric("plotIntDistr"))
+setGeneric("plotIntDistr",function(x,width=14,sortBy="order",rmNA = TRUE,ylim=NULL,...) standardGeneric("plotIntDistr"))
 ##' @describeIn plotIntDistr
-setMethod("plotIntDistr", signature(x = "metaXpara"), function(x,width=14,...){
+setMethod("plotIntDistr", signature(x = "metaXpara"), function(x,width=14,sortBy="order",rmNA = TRUE,ylim=NULL,...){
     dat <- x@peaksData
     fig <- paste(x@outdir,"/",x@prefix,"-intensityBoxplot.png",sep="")
     highfig <- sub(pattern = "png$",replacement = "pdf",x = fig)
     
     pdf(file = highfig,width = width,height = 3.7)
-    dat$value[dat$value<=0] <- NA
+    
     
     dat$class <- as.character(dat$class)
     dat$class[is.na(dat$class)] <- "QC"
     
-    
-    dat$value <- log2(dat$value)
-    
+    if(rmNA==TRUE){
+        dat$value[dat$value<=0] <- NA
+        dat$value <- log2(dat$value)
+    }else{
+        dat$value[is.na(dat$value)] <- 0
+        dat$value <- log2(dat$value+1)
+    }
     #save(dat,file="dat.rda")
-    
-    dat$order <- factor(dat$order,levels = sort(unique(dat$order)))
+    if(sortBy == "order"){
+        dat$order <- factor(dat$order,levels = sort(unique(dat$order)))
+    }else if(sortBy == "class"){
+        dat <- dplyr::arrange(dat,class,batch,order)
+        dat$order <- factor(dat$order,levels = unique(dat$order))
+    }else if(sortBy == "batch"){
+        dat <- dplyr::arrange(dat,batch,order)
+        dat$order <- factor(dat$order,levels = unique(dat$order))
+    }
     dat$batch <- as.character(dat$batch)
+    #save(dat,sortBy,file="test.rda")
+    
     ggobj1 <- ggplot(data=dat,aes(x=order,y=value,fill=class))+
         geom_boxplot(outlier.size=0.4)+
         #scale_x_discrete(labels = "")+
@@ -2578,12 +2856,24 @@ setMethod("plotIntDistr", signature(x = "metaXpara"), function(x,width=14,...){
         theme_bw()+
         ggtitle("Raw intensity")+
         ylab("log2(Intensity)")
+    if(!is.null(ylim)){
+        ggobj1 <- ggobj1 + ylim(ylim[1],ylim[2])
+    }
     print(ggobj1)
     
     ##
     if("valueNorm" %in% names(dat)){
-        dat$valueNorm[dat$valueNorm<=0] <- NA
-        dat$valueNorm <- log2(dat$valueNorm)
+        #dat$valueNorm[dat$valueNorm<=0] <- NA
+        
+        if(rmNA==TRUE){
+            dat$valueNorm[dat$valueNorm<=0] <- NA
+            dat$valueNorm <- log2(dat$valueNorm)
+        }else{
+            dat$valueNorm[is.na(dat$valueNorm)] <- 0
+            dat$valueNorm <- log2(dat$valueNorm+1)
+        }
+        
+        #dat$valueNorm <- log2(dat$valueNorm)
         ggobj <- ggplot(data=dat,aes(x=order,y=valueNorm,fill=class))+
             geom_boxplot(outlier.size=0.4)+
             #scale_x_discrete(labels = "")+
@@ -2591,6 +2881,10 @@ setMethod("plotIntDistr", signature(x = "metaXpara"), function(x,width=14,...){
             theme_bw()+
             ggtitle("Normalized intensity")+
             ylab("log2(Intensity)")
+        if(!is.null(ylim)){
+            ggobj <- ggobj + ylim(ylim[1],ylim[2])
+        }
+        print(ggobj1)
         print(ggobj)
     }
     dev.off()
@@ -2612,7 +2906,7 @@ setMethod("plotIntDistr", signature(x = "metaXpara"), function(x,width=14,...){
 ##' @param x A metaXpara object
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -2660,7 +2954,7 @@ setMethod("plotPeakSN", signature(x = "metaXpara"), function(x,...){
 ##' @param x A metaXpara object
 ##' @param ... Additional parameter
 ##' @return The figure name
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -2683,7 +2977,15 @@ setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,...){
     
     #nsample <- length(x@xcmsSetObj@filepaths)
     
-    samList <- read.delim(x@sampleListFile)
+    # samList <- read.delim(x@sampleListFile)
+    
+    if(is.null(x@sampleList) || is.na(x@sampleList) ||
+       nrow(x@sampleList) ==0){
+        samList  <- read.delim(x@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        samList  <- x@sampleList
+    }
+    
     peaksData <- x@rawPeaks[, names(x@rawPeaks) %in% samList$sample]
     dat <- apply(peaksData,2,function(a){sum(a!=0 & !is.na(a))})
     dat <- as.data.frame(dat)
@@ -2756,7 +3058,7 @@ setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,...){
 ##' @param valueID The name of the column that used as peak intensity
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -2956,7 +3258,7 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
 ##' The default values are 8.
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -2998,7 +3300,14 @@ setMethod("plotTreeMap", signature(para = "metaXpara"),
               x$ID <- NULL
               x <- as.data.frame(t(x))
               x$sample <- row.names(x)
-              samList <- read.delim(para@sampleListFile)
+              # samList <- read.delim(para@sampleListFile)
+              if(is.null(para@sampleList) || is.na(para@sampleList) ||
+                 nrow(para@sampleList) ==0){
+                  samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+              }else{
+                  samList  <- para@sampleList
+              }
+              
               samList$class <- as.character(samList$class) 
               samList$class[is.na(samList$class)] <- "QC"
               dat <- merge(x,samList,by="sample")
@@ -3044,7 +3353,7 @@ setMethod("plotTreeMap", signature(para = "metaXpara"),
 ##' The default values are 4.
 ##' @param ... Additional parameter
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' para <- new("metaXpara")
@@ -3119,6 +3428,7 @@ setMethod("plotQC", signature(para = "metaXpara"),
 ##' @param rmQC A logical indicating whether to remove the QC samples
 ##' @param zero2na A logical indicating whether to convert the value <=0 to NA
 ##' @param colors Color for heatmap
+##' @param anno A file or a data frame including sample annotation data.
 ##' @param width The width of the graphics region in inches. 
 ##' The default values are 12.
 ##' @param height The height of the graphics region in inches. 
@@ -3126,7 +3436,7 @@ setMethod("plotQC", signature(para = "metaXpara"),
 ##' @param saveRds Boolean, setting the argument to TRUE to save some objects to
 ##' disk for debug. Only useful for developer. Default is TRUE.
 ##' @param ... Additional parameter
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @return none
 ##' @examples
@@ -3145,14 +3455,18 @@ setMethod("plotQC", signature(para = "metaXpara"),
 ##' para <- missingValueImpute(para)
 ##' plotHeatMap(para,valueID="value",width=6)
 setGeneric("plotHeatMap",function(para,valueID="valueNorm",log=TRUE,rmQC=TRUE,
-                                  zero2na=FALSE,colors="none",
-                                  width=12,height=8,saveRds=TRUE,...) 
+                                  zero2na=FALSE,colors="none",anno=NULL,
+                                  width=12,height=8,saveRds=TRUE,show_rownames=FALSE,
+                                  show_colnames=FALSE,
+                                  classCol=NULL,
+                                  seriation=FALSE,...) 
     standardGeneric("plotHeatMap"))
 ##' @describeIn plotHeatMap
 setMethod("plotHeatMap", signature(para = "metaXpara"), 
           function(para,valueID="valueNorm",log=TRUE,rmQC=TRUE,
-                   zero2na=FALSE,colors="none",width=12,height=8,
-                   saveRds=TRUE,...){
+                   zero2na=FALSE,colors="none",anno=NULL,width=12,height=8,
+                   saveRds=TRUE,show_rownames=FALSE,show_colnames=FALSE,
+                   classCol=NULL,seriation=FALSE,...){
               
               message("plot heatmap for ",valueID)
               
@@ -3168,10 +3482,32 @@ setMethod("plotHeatMap", signature(para = "metaXpara"),
               }
               
               x<-dcast(peaksData,class+order+sample~ID,value.var = valueID)
+              
+              
+              
               row.names(x) <- paste(x$class,x$order,sep="_")
               classLabel <- x$class
               orderLabel <- x$order
               sampleLabel <- x$sample
+              
+              annotationList <- data.frame(Class=classLabel)
+              row.names(annotationList) <- row.names(x)
+              
+              if(!is.null(anno)){
+                  cat("Use user defined annotation data!\n")
+                  if(!is.data.frame(anno)){
+                      anno <- read.delim(anno, check.names = FALSE)
+                  }
+                  anno <- dplyr::filter(anno,sample %in% x$sample)
+                  tmp_x <- x %>% mutate(sample_label = row.names(x)) %>% 
+                      dplyr::select(sample,sample_label)
+                  m_anno <- merge(tmp_x,anno,by="sample",sort=FALSE)
+                  m_anno$sample <- NULL
+                  row.names(m_anno) <- m_anno$sample_label
+                  m_anno$sample_label <- NULL
+                  annotationList <- m_anno
+              }
+              
               x$class <- NULL
               x$order <- NULL
               x$sample <- NULL
@@ -3180,8 +3516,7 @@ setMethod("plotHeatMap", signature(para = "metaXpara"),
               if(log==TRUE){
                   x <- log2(x)  
               }
-              annotationList <- data.frame(Class=classLabel)
-              row.names(annotationList) <- names(x)
+              
               
               
               ## set colour
@@ -3203,14 +3538,44 @@ setMethod("plotHeatMap", signature(para = "metaXpara"),
               fig <- paste(para@outdir,"/",para@prefix,"-heatmap.pdf",sep="")
               resfile <- paste(para@outdir,"/",para@prefix,"-heatmap.rds",sep="")
               pdf(file = fig,width = width,height = height)
-              res$heatmap <- pheatmap(x,annotation=annotationList,color=colors,
-                                      show_rownames=FALSE,...)
+              #res$heatmap <- pheatmap(x,annotation=annotationList,color=colors,
+              #                        show_rownames=show_rownames,...)
+              
+              if(is.null(classCol)){
+                  ha <- HeatmapAnnotation(df=annotationList,show_annotation_name=TRUE)
+              }else{
+                  col_class <- classCol$col
+                  names(col_class) <- classCol$class
+                  ha <- HeatmapAnnotation(df=annotationList,show_annotation_name=TRUE,
+                                          col=list(Class=col_class))
+              }
+              
+              if(seriation==TRUE){
+                  cat("seriation ...\n")
+                  o1 <- seriation::seriate(dist(x),method="GW")
+                  o2 <- seriation::seriate(dist(t(x)),method="GW")
+                  hp1 <- Heatmap(x %>% as.data.frame(),
+                                 cluster_rows = as.dendrogram(o1[[1]]),
+                                 cluster_columns = as.dendrogram(o2[[1]]),
+                                 show_row_names = show_rownames,
+                                 show_column_names = show_colnames,
+                                 top_annotation = ha,name = "",...)
+              }else{
+                  hp1 <- Heatmap(x %>% as.data.frame(),
+                                 show_row_names = show_rownames,
+                                 show_column_names = show_colnames,
+                                 top_annotation = ha,name = "",...)
+              }
+              draw(hp1)
+              
               
               dev.off()
               
               fig_png <- str_replace(string = fig,pattern = ".pdf$",replacement = ".png")
               png(filename = fig_png,width = width, height = height,units = "in",res=120)
-              pheatmap(x,annotation=annotationList,color=colors,show_rownames=FALSE,...)
+              #save(x,annotationList,colors,show_rownames,file="test_ph.rda")
+              #pheatmap(x,annotation=annotationList,color=colors,show_rownames=show_rownames,...)
+              draw(hp1)
               dev.off()
               
               res$fig <- fig_png
@@ -3236,7 +3601,7 @@ setMethod("plotHeatMap", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -3291,7 +3656,7 @@ setMethod("filterQCPeaksByCV", signature(para = "metaXpara"),
 ##' The default values are 5.
 ##' @param ... Additional parameter
 ##' @return The figure name
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @exportMethod
 ##' @examples
 ##' library(faahKO)
@@ -3432,7 +3797,7 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' dir.case(para) <- "./"
@@ -3454,7 +3819,7 @@ setReplaceMethod("dir.case", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' dir.ctrl(para) <- "./"
@@ -3476,7 +3841,7 @@ setReplaceMethod("dir.ctrl", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' sampleListFile(para) <- "sample.txt"
@@ -3498,7 +3863,7 @@ setReplaceMethod("sampleListFile", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' ratioPairs(para) <- "1:2"
@@ -3520,7 +3885,7 @@ setReplaceMethod("ratioPairs", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' missValueImputeMethod(para) <- "knn"
@@ -3543,7 +3908,7 @@ setReplaceMethod("missValueImputeMethod", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' outdir(para) <- "outdir"
@@ -3565,7 +3930,7 @@ setReplaceMethod("outdir", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' prefix(para) <- "test"
@@ -3587,7 +3952,7 @@ setReplaceMethod("prefix", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -3614,7 +3979,7 @@ setReplaceMethod("peaksData", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -3643,7 +4008,7 @@ setReplaceMethod("addValueNorm",
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3666,7 +4031,7 @@ setReplaceMethod("rawPeaks", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3689,7 +4054,7 @@ setReplaceMethod("idres", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3714,7 +4079,7 @@ setReplaceMethod("xcmsSet.method", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3738,7 +4103,7 @@ setReplaceMethod("xcmsSet.ppm", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3762,7 +4127,7 @@ setReplaceMethod("xcmsSet.peakwidth", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3786,7 +4151,7 @@ setReplaceMethod("xcmsSet.snthresh", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3810,7 +4175,7 @@ setReplaceMethod("xcmsSet.prefilter", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3834,7 +4199,7 @@ setReplaceMethod("xcmsSet.mzCenterFun", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3858,7 +4223,7 @@ setReplaceMethod("xcmsSet.integrate", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3882,7 +4247,7 @@ setReplaceMethod("xcmsSet.mzdiff", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3906,7 +4271,7 @@ setReplaceMethod("xcmsSet.noise", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3930,7 +4295,7 @@ setReplaceMethod("xcmsSet.verbose.columns", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3953,7 +4318,7 @@ setReplaceMethod("xcmsSet.polarity", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -3977,7 +4342,7 @@ setReplaceMethod("xcmsSet.profparam", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4000,7 +4365,7 @@ setReplaceMethod("xcmsSet.nSlaves", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4024,7 +4389,7 @@ setReplaceMethod("xcmsSet.fitgauss", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4048,7 +4413,7 @@ setReplaceMethod("xcmsSet.sleep", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4072,7 +4437,7 @@ setReplaceMethod("xcmsSet.fwhm", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4096,7 +4461,7 @@ setReplaceMethod("xcmsSet.max", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4120,7 +4485,7 @@ setReplaceMethod("xcmsSet.step", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4144,7 +4509,7 @@ setReplaceMethod("group.bw0", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4168,7 +4533,7 @@ setReplaceMethod("group.mzwid0", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4191,7 +4556,7 @@ setReplaceMethod("group.bw", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4215,7 +4580,7 @@ setReplaceMethod("group.mzwid", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4238,7 +4603,7 @@ setReplaceMethod("group.minfrac", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4262,7 +4627,7 @@ setReplaceMethod("group.minsamp", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4286,7 +4651,7 @@ setReplaceMethod("group.max", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4310,7 +4675,7 @@ setReplaceMethod("group.sleep", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4334,7 +4699,7 @@ setReplaceMethod("retcor.method", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4358,7 +4723,7 @@ setReplaceMethod("retcor.profStep", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4382,7 +4747,7 @@ setReplaceMethod("retcor.plottype", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4406,7 +4771,7 @@ setReplaceMethod("qcRlscSpan", signature(para = "metaXpara"),
 ##' @return An object of metaXpara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(faahKO)
 ##' para <- new("metaXpara")
@@ -4430,7 +4795,7 @@ setReplaceMethod("xcmsSetObj", signature(para = "metaXpara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' scale(para) <- "uv"
@@ -4452,7 +4817,7 @@ setReplaceMethod("scale", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' center(para) <- TRUE
@@ -4475,7 +4840,7 @@ setReplaceMethod("center", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' t(para) <- 1
@@ -4498,7 +4863,7 @@ setReplaceMethod("t", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' validation(para) <- "CV"
@@ -4521,7 +4886,7 @@ setReplaceMethod("validation", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' ncomp(para) <- 5
@@ -4544,7 +4909,7 @@ setReplaceMethod("ncomp", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' nperm(para) <- 1000
@@ -4567,7 +4932,7 @@ setReplaceMethod("nperm", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' kfold(para) <- 5
@@ -4590,7 +4955,7 @@ setReplaceMethod("kfold", signature(para = "plsDAPara"),
 ##' @return An object of plsDAPara
 ##' @docType methods
 ##' @exportMethod 
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("plsDAPara")
 ##' method(para) <- "oscorespls"
@@ -4857,6 +5222,7 @@ importDataFromMetaboAnalyst=function(para,file){
     write.table(x = sample_infor,file = para@sampleListFile, sep="\t",row.names = FALSE,col.names = TRUE,quote=FALSE)
     para@rawPeaks <- read.csv(file,check.names = FALSE,header = FALSE,stringsAsFactors = FALSE,skip = 2)
     names(para@rawPeaks) <- c("name",sample_name)
+    para@sampleList <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)
     return(para)
 }
 
@@ -4871,7 +5237,7 @@ importDataFromMetaboAnalyst=function(para,file){
 ##' @param show.outlier Logical. The points will be colour-coded when the value is set as TRUE.
 ##' Default is FALSE
 ##' @return none
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @seealso \code{\link{plotPCA}}
 ##' @exportMethod
 ##' @examples

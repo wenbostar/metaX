@@ -14,10 +14,11 @@ importFrom(ggplot2, aes, aes_string, element_text, facet_grid,element_blank,
            ggplot_build, qplot, scale_fill_hue, scale_x_continuous,geom_hline,
            scale_y_continuous, theme, theme_bw,xlab,ylab,ggtitle,geom_path,
            scale_fill_discrete,scale_fill_gradient,annotate,geom_smooth,
-           xlim,scale_colour_manual,stat_function,scale_x_discrete,
+           xlim,scale_colour_manual,stat_function,scale_x_discrete,aes_,
            scale_y_log10,geom_density2d,scale_shape_manual,guide_legend,
            coord_cartesian,scale_shape_discrete,geom_jitter,position_jitter,
-           geom_density,coord_flip,labs,expand_limits,geom_boxplot,guides)
+           geom_density,coord_flip,labs,expand_limits,geom_boxplot,guides,
+           scale_color_manual,ylim)
 importFrom(scales,log2_trans,trans_format,trans_breaks,math_format,percent)
 importFrom(reshape2, melt, dcast)
 importFrom(plyr, ddply, dlply, here, summarise, .)
@@ -45,9 +46,10 @@ importFrom(pROC,roc,ci.auc,auc)
 importFrom(caret,train,trainControl,confusionMatrix,predict.train,
            twoClassSummary,rfeControl,rfe,
            createDataPartition)
-importFrom(dplyr,filter,rename,mutate,distinct,select,left_join,bind_rows,"%>%",
-           group_by,n_distinct,select_,do,summarize,ungroup,contains,mutate_,inner_join)
-importFrom(stringr,str_replace,str_detect,str_split)
+importFrom(dplyr,filter,rename,mutate,distinct,select,left_join,bind_rows,"%>%",arrange,
+           group_by,n_distinct,select_,do,summarize,ungroup,contains,mutate_,
+           inner_join,one_of)
+importFrom(stringr,str_replace,str_detect,str_split,str_replace_all)
 importFrom(RColorBrewer,brewer.pal)
 importFrom(DiffCorr,comp.2.cc.fdr,generate_g)
 importFrom(SSPA,pilotData,sampleSize,predictpower)
@@ -55,7 +57,7 @@ importFrom(RCurl,debugGatherer,getCurlHandle,postForm,getURL)
 importFrom(lattice,levelplot)
 importFrom(data.table,rbindlist)
 importFrom(tidyr,gather,spread_,spread)
-importFrom(readr,read_csv)
+importFrom(readr,read_csv,read_tsv,write_tsv)
 importFrom(ROCR,prediction,performance)
 importFrom(randomForest,randomForest,importance)
 importFrom(e1071,svm)
@@ -64,7 +66,10 @@ importFrom(mzR,openMSfile,header)
 importFrom(fpc,bhattacharyya.dist)
 importFrom(ropls,opls)
 importFrom(sva,ComBat)
+importFrom(edgeR,DGEList,calcNormFactors,cpm)
+importFrom(softImpute,softImpute,complete)
 importFrom(ComplexHeatmap,HeatmapAnnotation,Heatmap,draw)
+importFrom(seriation,seriate)
 
 export(makeDirectory)
 export(peakFinder)
@@ -176,3 +181,7 @@ export("method<-")
 export(plotROC)
 export(svrNormalize)
 export(plotTIC)
+export(getTable)
+export(plotPairs)
+export(batchCorrect)
+export(calcCorBetweenProteinAndRNA)

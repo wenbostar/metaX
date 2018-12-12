@@ -29,4 +29,3 @@ A list object
 Validation of the PLS-DA model by using permutation test 
 statistics
 }
-

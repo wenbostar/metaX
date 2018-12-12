@@ -21,6 +21,5 @@ A metaXpara object.
 Add identification result into metaXpara object
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

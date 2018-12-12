@@ -38,10 +38,9 @@ para <- reSetPeaksData(para)
 para <- missingValueImpute(para)
 res <- doQCRLSC(para,cpu=1)
 }
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 \seealso{
 \code{\link{plotQCRLSC}}
 }
-
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

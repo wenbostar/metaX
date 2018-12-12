@@ -5,15 +5,15 @@
 \alias{missingValueImpute}
 \title{Missing value imputation}
 \usage{
-missingValueImpute(x, valueID = "value", method = "knn", negValue = TRUE,
-  cpu = 1, ...)
+missingValueImpute(x, valueID = "value", method = "knn",
+  negValue = TRUE, cpu = 1, ...)
 }
 \arguments{
 \item{x}{The value needed to be imputated}
 
 \item{valueID}{The name of the column which will be used}
 
-\item{method}{Method for imputation: bpca,knn,svdImpute,rf,min}
+\item{method}{Method for imputation: bpca,knn,svdImpute,softImpute,rf,min}
 
 \item{negValue}{A logical indicates whether convert <=0 value to NA}
 
@@ -37,6 +37,5 @@ para <- reSetPeaksData(para)
 para <- missingValueImpute(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

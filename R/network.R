@@ -18,7 +18,7 @@
 ##' 7=cluster_label_prop,8=cluster_louvain,9=cluster_infomap
 ##' @param ... Additional parameter
 ##' @return The name of result file
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' para <- new("metaXpara")
@@ -210,7 +210,7 @@ cor.network=function(para,group,valueID="value",cor.method="spearman",
 ##' "leda" are supported.
 ##' @param ... Additional parameter
 ##' @return An object of igraph
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' para <- new("metaXpara")
@@ -362,7 +362,7 @@ plotCorHeatmap=function(para,valueID="value",samples=NA,label="order",width=6,
         xyData <- xyData[,samList$sample]
     }
     #corres <- cor(xyData,method = cor.method,...)
-    corres <- cor(xyData,method = cor.method,use = "complete.obs")
+    corres <- cor(xyData,method = cor.method,use = "pairwise.complete.obs")
     #save(corres,xyData,file="xy.rda")
     if(is.null(samples)){
         prefix = "ALL"

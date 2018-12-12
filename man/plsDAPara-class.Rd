@@ -43,7 +43,7 @@ in \pkg{pls}}
 
 \item{\code{cpu}}{The number of cpus used, default is all cpus.}
 }}
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

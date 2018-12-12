@@ -34,6 +34,5 @@ para <- reSetPeaksData(para)
 p <- filterQCPeaks(para,ratio=0.5)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

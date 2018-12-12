@@ -22,6 +22,5 @@ outdir(para) <- "outdir"
 makeDirectory(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

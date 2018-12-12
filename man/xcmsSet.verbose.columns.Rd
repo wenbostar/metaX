@@ -24,6 +24,5 @@ para <- new("metaXpara")
 xcmsSet.verbose.columns(para) <- FALSE
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

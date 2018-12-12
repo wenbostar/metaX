@@ -9,7 +9,7 @@
 ##' @param valueID The name of column used for transformation
 ##' @param ... Additional parameter
 ##' @return An new metaX object
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' para <- new("metaXpara")
@@ -22,6 +22,9 @@
 ##' para <- preProcess(para,valueID = "value",scale="uv")
 preProcess=function(para,t=0,scale=c("auto", "range", "pareto", "vast", "level", "power","none"),
                     center=TRUE,valueID="valueNorm"){
+    cat("Centering:",center,"\n")
+    cat("Scaling:",scale,"\n")
+    cat("Transformation:",t,"\n")
     p <- transformation(para=para,method = t,valueID = valueID)
     p <- dataScaling(para=p,method = scale,center = center,valueID = valueID)
     return(p)
@@ -44,18 +47,27 @@ logTransform=function(x){
 # }
 
 ## a data matrix ([data.frame object] row: molecules, col: samples or replicates)
-dataScaling=function (para, method = c("auto", "range", "pareto", "vast", "level", "power","none"),
+dataScaling=function (para, method = c("auto", "uv", "range", "pareto", "vast", "level", "power","none"),
                       center=TRUE,valueID="value"){
     peaksData <- para@peaksData
     xyData <- peaksData %>% select_("ID","class","sample",valueID) %>% spread_("ID",valueID) 
     if(center==TRUE){
+        cat("centering ...\n")
+        # save(xyData,file="xyData.rda")
+        ## row: samples, column: features, feature-wise
+        ## If center is TRUE then centering is done by subtracting the column 
+        ## means (omitting NAs) of x from their corresponding columns, and if 
+        ## center is FALSE, no centering is done.
         rData <- xyData %>% select(-class,-sample) %>% scale(center=TRUE,scale = FALSE) %>% t()    
     }else{
+        cat("no centering ...\n")
         rData <- xyData %>% select(-class,-sample) %>% t()
     }
     
-    if(method == "auto"){
-        ## for each row - metabolite
+    ## rData => row: features, column: samples
+    
+    if(method == "auto" || method == "uv"){
+        ## for each row - metabolite/protein/gene, feature-wise
         res <- apply(rData, 1, function(x) (x - mean(x, na.rm = TRUE))/sd(x, na.rm = TRUE))
     }else if(method == "range"){
         res <- apply(rData, 1, function(x) (x - mean(x, na.rm = TRUE))/(range(x)[2] -  range(x)[1]))
@@ -68,6 +80,7 @@ dataScaling=function (para, method = c("auto", "range", "pareto", "vast", "level
     }else if(method == "power"){
         res <- apply(rData, 1, function(x) sqrt(x) - mean(sqrt(x)))
     }else{
+        cat("Not valid method:",method,"\n")
         res <- apply(rData, 1, function(x) {x})
     }
     
@@ -96,7 +109,7 @@ dataScaling=function (para, method = c("auto", "range", "pareto", "vast", "level
 ##' @param valueID The name of column used for transformation
 ##' @param ... Additional parameter
 ##' @return An new metaX object
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' para <- new("metaXpara")
@@ -220,8 +233,7 @@ doglog=function(para,valueID="value",useQC=FALSE){
     x <- t(x)	
     N <- dim(x)[2]
     
-    if(error_flag)
-    {
+    if(error_flag){
         lambda <- lambda_std
         scal_fact <- apply(x,2,sum,na.rm=T)
         scal_fact <- mean(scal_fact)

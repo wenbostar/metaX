@@ -31,4 +31,3 @@ y<- rep(c("c","t"),25)
 calcAUROC(x,y)
 }
 }
-

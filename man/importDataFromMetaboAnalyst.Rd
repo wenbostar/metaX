@@ -18,4 +18,3 @@ an object of metaXpara
 \description{
 Import peak data from MetaboAnalyst
 }
-

@@ -123,7 +123,7 @@ peak finding cycles. See \code{\link{findPeaks.centWave}}}
 
 \item{\code{qcRlscSpan}}{The value of span for QC-RLSC}
 }}
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

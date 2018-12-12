@@ -48,6 +48,5 @@ para <- missingValueImpute(para)
 gg <- plotNetwork(para,group=c("S","C"),degree.thr = 10,cor.thr = 0.8)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

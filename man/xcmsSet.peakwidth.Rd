@@ -24,6 +24,5 @@ para <- new("metaXpara")
 xcmsSet.peakwidth(para) <- 12
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

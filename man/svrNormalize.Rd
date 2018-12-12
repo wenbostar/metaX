@@ -21,13 +21,12 @@ A new object of metaXpara
 \description{
 Batch correction using SVR normalization
 }
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 \references{
 X. Shen, X. Gong, Y. Cai, Y. Guo, J. Tu, H. Li, T.Zhang, 
 J. Wang, F. Xue, and Z.-J. Zhu, Normalization and 
 Integration of Large-Scale Metabolomics Data Using Support Vector 
 Regression, Metabolomics, 2016, 12: 89
 }
-
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

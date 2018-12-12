@@ -50,6 +50,5 @@ para <- missingValueImpute(para)
 resfile <- cor.network(para,group=c("S","C"))
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

@@ -36,10 +36,9 @@ para <- transformation(para,valueID = "value")
 res <- metaX::plotPCA(para,valueID="value",scale="uv",center=TRUE)
 plotLoading(res$pca,fig="loading.png")
 }
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 \seealso{
 \code{\link{plotPCA}}
 }
-
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

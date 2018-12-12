@@ -4,9 +4,10 @@
 \alias{featureSelection}
 \title{Feature selection and modeling}
 \usage{
-featureSelection(para, group, method = "rf", valueID = "value", fold = 5,
-  resampling_method = "repeatedcv", repeats = 10, plot_roc = TRUE,
-  ratio = 2/3, k = 100, plotCICurve = TRUE, verbose = FALSE, ...)
+featureSelection(para, group, method = "rf", valueID = "value",
+  fold = 5, resampling_method = "repeatedcv", repeats = 10,
+  plot_roc = TRUE, ratio = 2/3, k = 100, plotCICurve = TRUE,
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{para}{An object of \code{metaXpara}}
@@ -31,4 +32,3 @@ The result of feature selection and modeling
 \description{
 Feature selection and modeling
 }
-

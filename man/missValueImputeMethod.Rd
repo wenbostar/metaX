@@ -23,6 +23,5 @@ para <- new("metaXpara")
 missValueImputeMethod(para) <- "knn"
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

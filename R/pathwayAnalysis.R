@@ -6,6 +6,7 @@
 ##' @param outfile The output file name
 ##' @return A data.frame object
 ##' @export
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples 
 ##' \dontrun{
 ##' res <- pathwayAnalysis(id=c("HMDB00060","HMDB00056","HMDB00064"),

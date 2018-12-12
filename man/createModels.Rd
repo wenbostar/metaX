@@ -4,7 +4,8 @@
 \alias{createModels}
 \title{Create predictive models}
 \usage{
-createModels(para, method = "plsda", group = NA, valueID = "value", ...)
+createModels(para, method = "plsda", group = NA, valueID = "value",
+  ...)
 }
 \arguments{
 \item{para}{An object of \code{metaXpara}}
@@ -36,4 +37,3 @@ para <- metaX::preProcess(para,scale = "uv",center = TRUE,
                         valueID = "value")
 rs <- createModels(para,method="plsda",group=c("S","C"),valueID="value")
 }
-

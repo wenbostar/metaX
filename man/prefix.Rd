@@ -23,6 +23,5 @@ para <- new("metaXpara")
 prefix(para) <- "test"
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

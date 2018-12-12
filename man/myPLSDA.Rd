@@ -39,6 +39,5 @@ res <- myPLSDA(x,y,save=TRUE,ncomp=2,validation="CV",k=7,
     method="oscorespls")
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

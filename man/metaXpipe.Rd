@@ -8,9 +8,10 @@
 metaXpipe(para, plsdaPara, cvFilter = 0.3, remveOutlier = TRUE,
   outTol = 1.2, doQA = TRUE, doROC = TRUE, qcsc = 0,
   nor.method = "pqn", pclean = TRUE, t = 1, scale = "uv",
-  idres = NULL, nor.order = 1, out.rmqc = FALSE, saveRds = TRUE,
-  cpu = 0, missValueRatioQC = 0.5, missValueRatioSample = 0.8,
-  pcaLabel = "none", ...)
+  idres = NULL, center = TRUE, nor.order = 1, out.rmqc = FALSE,
+  saveRds = TRUE, cpu = 0, missValueRatioQC = 0.5,
+  missValueRatioSample = 0.8, pcaLabel = "none", classCol = NULL,
+  ...)
 }
 \arguments{
 \item{para}{A metaXpara object.}
@@ -101,6 +102,5 @@ p <- metaXpipe(para,plsdaPara=plsdaPara)
 }
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

@@ -34,6 +34,5 @@ addValueNorm(para) <- para
 plotPeakBox(para,samples=c("S","C"))
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

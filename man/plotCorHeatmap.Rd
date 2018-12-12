@@ -4,9 +4,10 @@
 \alias{plotCorHeatmap}
 \title{Plot correlation heatmap}
 \usage{
-plotCorHeatmap(para, valueID = "value", samples = NA, label = "order",
-  width = 6, cor.method = "spearman", height = 6, anno = FALSE,
-  cluster = FALSE, shownames = FALSE, ...)
+plotCorHeatmap(para, valueID = "value", samples = NA,
+  label = "order", width = 6, cor.method = "spearman",
+  sortBy = "class", colorRange = NULL, height = 6, anno = FALSE,
+  cluster = FALSE, shownames = FALSE, classCol = NULL, ...)
 }
 \arguments{
 \item{para}{A metaXpara object}
@@ -21,6 +22,14 @@ plotCorHeatmap(para, valueID = "value", samples = NA, label = "order",
 The default values are 6.}
 
 \item{cor.method}{Method used for correlation}
+
+\item{sortBy}{Sort the sample name according the this value, default 
+is "class". This is valid when cluster is FALSE. 
+Valid value: class, order, batch. This parameter is useful to 
+sort the sample name according to batch name when users want to
+check batch effect.}
+
+\item{colorRange}{The color range of heatmap.}
 
 \item{height}{The height of the graphics region in inches. 
 The default values are 6.}
@@ -52,6 +61,5 @@ para <- missingValueImpute(para)
 plotCorHeatmap(para,valueID="value",samples=NULL,width=6,anno=TRUE)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

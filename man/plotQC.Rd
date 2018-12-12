@@ -5,8 +5,8 @@
 \alias{plotQC}
 \title{Plot the correlation change of the QC samples.}
 \usage{
-plotQC(para, valueID = "valueNorm", step = 4, log = TRUE, width = 8,
-  height = 4, ...)
+plotQC(para, valueID = "valueNorm", step = 4, log = TRUE,
+  width = 8, height = 4, ...)
 }
 \arguments{
 \item{para}{A metaXpara object}
@@ -42,6 +42,5 @@ para <- missingValueImpute(para)
 plotQC(para,valueID="value")
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

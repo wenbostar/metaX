@@ -24,6 +24,5 @@ para <- new("metaXpara")
 group.mzwid(para) <- 0.015
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

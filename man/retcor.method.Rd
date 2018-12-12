@@ -24,6 +24,5 @@ para <- new("metaXpara")
 retcor.method(para) <- "obiwarp"
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

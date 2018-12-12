@@ -24,6 +24,5 @@ para <- new("metaXpara")
 idres(para) <- data.frame()
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

@@ -4,8 +4,8 @@
 \alias{powerAnalyst}
 \title{Power Analysis}
 \usage{
-powerAnalyst(para, group, valueID = "value", log = TRUE, maxInd = 1000,
-  fdr = 0.1, showPlot = FALSE)
+powerAnalyst(para, group, valueID = "value", log = TRUE,
+  maxInd = 1000, fdr = 0.1, showPlot = FALSE)
 }
 \arguments{
 \item{para}{An metaXpara object}
@@ -46,6 +46,5 @@ powerAnalyst(para,group=c("case","control"),log=FALSE,maxInd=200)
 }
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

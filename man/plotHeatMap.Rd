@@ -6,8 +6,9 @@
 \title{Plot heatmap}
 \usage{
 plotHeatMap(para, valueID = "valueNorm", log = TRUE, rmQC = TRUE,
-  zero2na = FALSE, colors = "none", width = 12, height = 8,
-  saveRds = TRUE, ...)
+  zero2na = FALSE, colors = "none", anno = NULL, width = 12,
+  height = 8, saveRds = TRUE, show_rownames = FALSE,
+  show_colnames = FALSE, classCol = NULL, seriation = FALSE, ...)
 }
 \arguments{
 \item{para}{A metaXpara object}
@@ -21,6 +22,8 @@ plotHeatMap(para, valueID = "valueNorm", log = TRUE, rmQC = TRUE,
 \item{zero2na}{A logical indicating whether to convert the value <=0 to NA}
 
 \item{colors}{Color for heatmap}
+
+\item{anno}{A file or a data frame including sample annotation data.}
 
 \item{width}{The width of the graphics region in inches. 
 The default values are 12.}
@@ -56,6 +59,5 @@ para <- missingValueImpute(para)
 plotHeatMap(para,valueID="value",width=6)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

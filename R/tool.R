@@ -174,7 +174,7 @@ countMissingValue = function(x,ratio,omit.negative=TRUE){
 ##' @param ... Other argument
 ##' @return A metaXpara object.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' \dontrun{
 ##' ## example 1: no QC sample
@@ -206,21 +206,28 @@ countMissingValue = function(x,ratio,omit.negative=TRUE){
 ##' }
 setGeneric("metaXpipe",function(para,plsdaPara,cvFilter = 0.3,remveOutlier=TRUE,
                               outTol=1.2,doQA=TRUE,doROC=TRUE,qcsc=0,nor.method="pqn",
-                              pclean=TRUE,t=1,scale="uv",idres=NULL,
+                              pclean=TRUE,t=1,scale="uv",idres=NULL,center=TRUE,
                               nor.order=1,out.rmqc=FALSE,saveRds=TRUE,cpu=0,
                               missValueRatioQC=0.5,missValueRatioSample=0.8,
-                              pcaLabel="none",...) 
+                              pcaLabel="none",classCol=NULL,...) 
     standardGeneric("metaXpipe"))
 ##' @describeIn metaXpipe
 setMethod("metaXpipe", signature(para = "metaXpara"),
           function(para,plsdaPara,cvFilter = 0.3,remveOutlier=TRUE,outTol=1.2,
                    doQA=TRUE,doROC=TRUE,qcsc=0,nor.method="pqn",
-                   pclean=TRUE,t=1,scale="uv",idres=NULL,nor.order=1,
+                   pclean=TRUE,t=1,scale="uv",idres=NULL,center=TRUE,nor.order=1,
                    out.rmqc=FALSE,saveRds=TRUE,cpu=0,
                    missValueRatioQC=0.5,missValueRatioSample=0.8,
-                   pcaLabel="none",...){
+                   pcaLabel="none",classCol=NULL,...){
     
-    checkSampleList(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+        nrow(para@sampleList) ==0){
+        sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        sampleList  <- para@sampleList
+    }
+              
+    checkSampleList(sampleList)
               
     if(is.null(para@ratioPairs)){
         stop("Please set the value of ratioPairs!")
@@ -256,7 +263,15 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
     ##Introduce the experiment design and data analysis
     s2_sub1 <- newSubSection(asStrong("Summary of Data Set"))
     
-    expDesign <- read.delim(para@sampleListFile)
+    # expDesign <- read.delim(para@sampleListFile)
+    
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        expDesign  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        expDesign  <- para@sampleList
+    }
+    
     expDesign$class <- as.character(expDesign$class)
     expDesign$class[is.na(expDesign$class)] <- "QC"
     
@@ -362,8 +377,11 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
         
         if(hasQC(para)){
             message("plot correlation heatmap...")
+            #saveRDS(para,file = "para.rda")
             fig <- plotCorHeatmap(para = para,valueID = "value",anno = TRUE,
-                                  height = 3.7,width = 3.7,cluster = FALSE)
+                                  samples = NA, ## QC sample
+                                  height = 6,width = 6,cluster = FALSE,
+                                  classCol=classCol)
             fig1 <- paste("data/",basename(fig$fig),sep="")
             fig2 <- paste("data/",basename(fig$highfig),sep="")
             s3_sub1 <- addTo(s3_sub1,
@@ -410,7 +428,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
     }
     
     message(date(),"\tmissing value inputation...")
-    para <- missingValueImpute(para,...)
+    para <- missingValueImpute(para,cpu=cpu,...)
     s3_sub1 <- addTo(s3_sub1,newParagraph("The missing value were imputed by ",
                                           para@missValueImputeMethod,"."))
     ## 4. remove outlier samples
@@ -422,10 +440,10 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
         ## maybe have missing value
         if(nor.method=="combat"){
             message(date(),"\tDo missing value imputation after combat normalization...")
-            pr <- missingValueImpute(x = pr,valueID="value")
+            pr <- missingValueImpute(x = pr,valueID="value",cpu=cpu)
         }
         pr <- transformation(pr,method = t,valueID = "value")
-        pr <- metaX::preProcess(pr,scale = scale,center = TRUE,
+        pr <- metaX::preProcess(pr,scale = scale,center = center,
                                 valueID = "value")
         ## 
         if(saveRds){
@@ -460,7 +478,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                 ## maybe have missing value
                 if(nor.method=="combat"){
                     message(date(),"\tDo missing value imputation after combat normalization...")
-                    para <- missingValueImpute(x = para,valueID="value")
+                    para <- missingValueImpute(x = para,valueID="value",cpu=cpu)
                 }
                 
                 message(date(),"\tQC-RLSC...")
@@ -482,7 +500,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                 ## maybe have missing value
                 if(nor.method=="combat"){
                     message(date(),"\tDo missing value imputation after combat normalization...")
-                    para <- missingValueImpute(x = para,valueID="value")
+                    para <- missingValueImpute(x = para,valueID="value",cpu=cpu)
                 }
                 message(date(),"\tSVR-based batch correction...")
                 res <- svrNormalize(para = para,ntop=5,cpu=cpu)
@@ -497,6 +515,29 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                                           valueID = "valueNorm")
                 
                 fig <- plotQCRLSC(para = para)
+            }else if(qcsc==3){
+                message(date(),"\tnormalization before ComBat batch correction...")
+                para <- metaX::normalize(para = para, method = nor.method,
+                                         valueID="value",...)
+                ## maybe have missing value
+                #if(nor.method=="combat"){
+                #    message(date(),"\tDo missing value imputation after combat normalization...")
+                #    para <- missingValueImpute(x = para,valueID="value",cpu=cpu)
+                #}
+                message(date(),"\tComBat batch correction...")
+                para <- batchCorrect(para,valueID = "value",use_class = FALSE,
+                                     cpu=cpu,
+                                     impute_method=para@missValueImputeMethod)
+                para@peaksData$valueNorm <- para@peaksData$value
+                message("The CV distribution after normalization: ")
+                printCV(para,valueID = "valueNorm")
+                prefix_tmp <- para@prefix
+                para@prefix <- paste(para@prefix,"-norm",sep="")
+                metaX::plotCV(para,valueID="valueNorm")
+                para@prefix <- prefix_tmp
+                para <- filterQCPeaksByCV(para,cvFilter = cvFilter,
+                                          valueID = "valueNorm")
+                
             }else{
                 stop("Not valid qcsc value!")
             }
@@ -512,7 +553,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                 
                 if(nor.method=="combat"){
                     message(date(),"\tDo missing value imputation after combat normalization...")
-                    para <- missingValueImpute(x = para,valueID="valueNorm")
+                    para <- missingValueImpute(x = para,valueID="valueNorm",cpu=cpu)
                 }
                 message("The CV distribution after normalization: ")
                 printCV(para,valueID = "valueNorm")
@@ -532,7 +573,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                                          valueID="valueNorm",...)
                 if(nor.method=="combat"){
                     message(date(),"\tDo missing value imputation after combat normalization...")
-                    para <- missingValueImpute(x = para,valueID="valueNorm")
+                    para <- missingValueImpute(x = para,valueID="valueNorm",cpu=cpu)
                 }
                 message("The CV distribution after normalization: ")
                 printCV(para,valueID = "valueNorm")
@@ -542,21 +583,44 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                 para@prefix <- prefix_tmp
                 para <- filterQCPeaksByCV(para,cvFilter = cvFilter,
                                           valueID = "valueNorm")
-            
+            }else if(qcsc==3){
+                
+                message(date(),"\tComBat batch correction...")
+                para <- batchCorrect(para,valueID = "value",use_class = FALSE,
+                                     cpu=cpu,
+                                     impute_method=para@missValueImputeMethod)
+                para@peaksData$valueNorm <- para@peaksData$value
+                
+                message(date(),"\tnormalization after ComBat batch correction...")
+                para <- metaX::normalize(para = para, method = nor.method,
+                                         valueID="valueNorm",...)
+                
+                
+                message("The CV distribution after normalization: ")
+                printCV(para,valueID = "valueNorm")
+                prefix_tmp <- para@prefix
+                para@prefix <- paste(para@prefix,"-norm",sep="")
+                metaX::plotCV(para,valueID="valueNorm")
+                para@prefix <- prefix_tmp
+                para <- filterQCPeaksByCV(para,cvFilter = cvFilter,
+                                          valueID = "valueNorm")
+                
             }else{
                 stop("Not valid qcsc value!")
             }
             
         }
         
-        s3_sub1 <- addTo(s3_sub1,newParagraph("The data was normalized by QC-based batch correction."))
-        s3_sub1 <- addTo(s3_sub1,newTable(res$cvBatch,"CV summary after QC-based batch correction for each batch."))
-        s3_sub1 <- addTo(s3_sub1,newTable(res$cvAll,"CV summary after QC-based batch correction for all samples."))
-        fig1 <- paste("data/",basename(fig$fig),sep="")
-        fig2 <- paste("data/",basename(fig$highfig),sep="")
-        s3_sub1 <- addTo(s3_sub1,
-                         newFigure(fig1,"QC-based batch correction figure.",
-                                   fileHighRes = fig2))
+        if(qcsc!=3){
+            s3_sub1 <- addTo(s3_sub1,newParagraph("The data was normalized by QC-based batch correction."))
+            s3_sub1 <- addTo(s3_sub1,newTable(res$cvBatch,"CV summary after QC-based batch correction for each batch."))
+            s3_sub1 <- addTo(s3_sub1,newTable(res$cvAll,"CV summary after QC-based batch correction for all samples."))
+            fig1 <- paste("data/",basename(fig$fig),sep="")
+            fig2 <- paste("data/",basename(fig$highfig),sep="")
+            s3_sub1 <- addTo(s3_sub1,
+                             newFigure(fig1,"QC-based batch correction figure.",
+                                       fileHighRes = fig2))
+        }
         
     }else{
         para@peaksData$valueNorm <- para@peaksData$value
@@ -564,7 +628,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                                  valueID="valueNorm",...)
         if(nor.method=="combat"){
             message(date(),"\tDo missing value imputation after combat normalization...")
-            para <- missingValueImpute(x = para,valueID="valueNorm")
+            para <- missingValueImpute(x = para,valueID="valueNorm",cpu=cpu)
         }
         
         message("The CV distribution after normalization: ")
@@ -593,9 +657,11 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
             message("plot correlation heatmap...")
             prefix <- para@prefix
             para@prefix <- paste(prefix,"-nor",sep="")
-            save(para,file="para.rda")
+            #save(para,file="para.rda")
             fig <- plotCorHeatmap(para = para,valueID = "valueNorm",anno = TRUE,
-                                  height = 3.7,width = 3.7,cluster = FALSE)
+                                  samples = NA, # QC samples
+                                  height = 6,width = 6,cluster = FALSE,
+                                  classCol=classCol)
             fig1 <- paste("data/",basename(fig$fig),sep="")
             fig2 <- paste("data/",basename(fig$highfig),sep="")
             s3_sub1 <- addTo(s3_sub1,
@@ -632,10 +698,11 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
             
             
             fig <- plotHeatMap(pp,valueID="valueNorm",log=TRUE,rmQC=FALSE,
-                               scale="row",
-                               clustering_distance_rows="euclidean",
-                               clustering_distance_cols="euclidean",
-                               clustering_method="ward.D2",
+                               #scale="row",
+                               #clustering_distance_rows="euclidean",
+                               #clustering_distance_cols="euclidean",
+                               #clustering_method="ward.D2",
+                               classCol=classCol,
                                show_colnames=FALSE)
             fig1 <- paste("data/",basename(fig$fig),sep="")
             fig2 <- paste("data/",basename(fig$highfig),sep="")
@@ -646,22 +713,47 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
             
             rm(pp)
             para@prefix <- prefix
+        }else{
+            message("plot correlation heatmap...")
+            prefix <- para@prefix
+            para@prefix <- paste(prefix,"-nor-batchcheck",sep="")
+            #save(para,file="debug_p.rda")
+            fig_tmp <- plotCorHeatmap(para = para,valueID = "valueNorm",anno = TRUE,
+                                      samples = NULL,
+                                      height = 6,width = 6,sortBy="batch",cluster = FALSE,
+                                      classCol=classCol)
+            para@prefix <- prefix 
         }
     }
     
+    
     makeMetaboAnalystInput(para,rmQC=out.rmqc,valueID="valueNorm",
                            prefix="norm")
-    
+    #save(para,t,file="test.rda")
+    save(para,t,scale,center,pcaLabel,classCol,file=paste(para@outdir,"/","pca.rda",sep=""))
     ppca <- transformation(para,method = t,valueID = "valueNorm")
-    ppca <- metaX::preProcess(ppca,scale = scale,center = TRUE,
+    ppca <- metaX::preProcess(ppca,scale = scale,center = center,
                               valueID = "valueNorm")
     fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = TRUE,
-                          rmQC = FALSE,label = pcaLabel)
+                          rmQC = FALSE,label = pcaLabel,classColor = classCol,...)
     prefix_bak <- ppca@prefix
     ppca@prefix <- paste(ppca@prefix,"-nobatch",sep="")
     fig_nobatch <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = FALSE,
-                          rmQC = FALSE,label = pcaLabel)
+                          rmQC = FALSE,label = pcaLabel,classColor = classCol,...)
+    
+    
+    
+    ## plot heatmap
+    plotHeatMap(ppca,valueID="valueNorm",log=FALSE,rmQC=FALSE,
+                #scale="row",
+                #clustering_distance_rows="euclidean",
+                #clustering_distance_cols="euclidean",
+                #clustering_method="ward.D2",
+                classCol=classCol,
+                show_colnames=FALSE)
+    
     ppca@prefix <- prefix_bak
+    
     
     fig1 <- paste("data/",basename(fig$fig),sep="")
     fig2 <- paste("data/",basename(fig$highfig),sep="")
@@ -673,33 +765,37 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
     ## remove QC
     ppca@prefix <- paste(ppca@prefix,"-noqc",sep="")
     fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = TRUE,
-                          rmQC = TRUE,label = pcaLabel)
+                          rmQC = TRUE,label = pcaLabel,classColor = classCol,...)
     ## no QC, no batch
     ppca@prefix <- paste(ppca@prefix,"-nobatch",sep="")
     fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = FALSE,
-                          rmQC = TRUE,label = pcaLabel)
+                          rmQC = TRUE,label = pcaLabel,classColor = classCol,...)
     #plotPLSDA(para)
-    para <- peakStat(para = para,plsdaPara = plsdaPara,doROC=doROC,pcaLabel=pcaLabel)
     
-    
-    
-    
-    ## add identification result
-    if(!is.null(idres)){
-        para <- addIdentInfo(para=para,file=idres)
+    if(!is.null(para@ratioPairs) && para@ratioPairs != ""){
+        ## only perform this analysis when a user provides comparison group
+        ## information. 
+        para <- peakStat(para = para,plsdaPara = plsdaPara,doROC=doROC,pcaLabel=pcaLabel,classColor = pcaColor)
+        
+        ## add identification result
+        if(!is.null(idres)){
+            para <- addIdentInfo(para=para,file=idres)
+        }
+        
+        s3_sub2 <- newSubSection(asStrong("Metabolite quantification and identification."))
+        s3_sub2 <- addTo(s3_sub2,
+                         newParagraph("This part contains the quantification and identification."))
+        
+        qf <- paste("data/",para@prefix,"-quant.txt",sep="")
+        show_quant <- para@quant[1:20,]
+        names(show_quant) <- gsub(pattern = "_",replacement = "\n",x=names(show_quant))
+        s3_sub2 <- addTo(s3_sub2,
+                         newTable(show_quant,"Metabolite quantification result.",file=qf))
+        
+        s3 <- addTo(s3,s3_sub2)
     }
     
-    s3_sub2 <- newSubSection(asStrong("Metabolite quantification and identification."))
-    s3_sub2 <- addTo(s3_sub2,
-                     newParagraph("This part contains the quantification and identification."))
     
-    qf <- paste("data/",para@prefix,"-quant.txt",sep="")
-    show_quant <- para@quant[1:20,]
-    names(show_quant) <- gsub(pattern = "_",replacement = "\n",x=names(show_quant))
-    s3_sub2 <- addTo(s3_sub2,
-                     newTable(show_quant,"Metabolite quantification result.",file=qf))
-    
-    s3 <- addTo(s3,s3_sub2)
     if(saveRds){
         saveRDS(para,file = paste(para@outdir,"/",para@prefix,"-result.rds",
                                   sep=""))
@@ -814,7 +910,7 @@ myLoessFit = function(x,y,newX,span.vals=seq(0.1,1,by=0.05),log=TRUE,a=1){
 ##' @param ... Other argument
 ##' @return A metaXpara object.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -846,7 +942,7 @@ setMethod("removeSample", signature(para = "metaXpara"),
 ##' @param ... Other argument
 ##' @return A metaXpara object.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 setGeneric("addIdentInfo",function(para,file,...) 
     standardGeneric("addIdentInfo"))
 ##' @describeIn addIdentInfo
@@ -912,7 +1008,7 @@ setMethod("addIdentInfo", signature(para = "metaXpara",file="character"),
 ##' @param ... Additional parameters
 ##' @return The output figure name.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -978,7 +1074,7 @@ setMethod("plotPeakBox", signature(para = "metaXpara"),
 ##' @param ... Other argument
 ##' @return The output figure name.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -1043,7 +1139,7 @@ setMethod("plotPeakSumDist", signature(para = "metaXpara"),
 ##' @param ... Other argument
 ##' @return The output figure name.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -1104,7 +1200,7 @@ setMethod("plotPeakMeanDist", signature(para = "metaXpara"),function(para,valueI
 ##' @param ... Other argument
 ##' @return A metaXpara object.
 ##' @exportMethod
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -1299,8 +1395,11 @@ checkPvaluePlot=function(file=NULL,group=NULL,fig="pvalue.png"){
 
 
 checkSampleList=function(file=NULL){
-    a <- read.delim(file,stringsAsFactors = FALSE)
-    
+    if(!is.data.frame(file)){
+        a <- read.delim(file,stringsAsFactors = FALSE)
+    }else{
+        a <- file
+    }
     ## check sample name
     sort_sample <- sort(a$sample)
     ns1 = length(sort_sample)
@@ -1353,7 +1452,7 @@ checkSampleList=function(file=NULL){
 ##' @param corOrder Code colour according to injection order
 ##' @return none
 ##' @export
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 plotTIC=function(file,corBatch=FALSE,corOrder=TRUE){
     
     ## 
@@ -1433,6 +1532,95 @@ printCV=function(para,valueID="valueNorm"){
         print(cvstat2)
     }
 }
+
+
+##' @title Get a table from a metaXpara object.
+##' @description Get a table from a metaXpara object.
+##' @param para A metaXpara object
+##' @param valueID The ID of value to extract
+##' @return A data.frame
+##' @export
+##' @author Bo Wen \email{wenbostar@@gmail.com}
+getTable=function(para,valueID="valueNorm",outfile=NULL, zero2NA = FALSE){
+    if(zero2NA == TRUE){
+        cat("Set zero as NA!\n")
+        para@peaksData[,valueID][para@peaksData[,valueID] <= 0] <- NA
+    }
+    
+    res <- para@peaksData %>% select_("ID","sample",valueID) %>% 
+        spread_(key = "sample",value = valueID)
+    n <- sum(is.na(para@peaksData[,valueID])) + sum(para@peaksData[,valueID]<=0,na.rm = TRUE)
+    cat("value with NA or <= 0:",n,"\n")
+    
+    if(!is.null(outfile)){
+        cat("Export data to file:",outfile,"\n")
+        write_tsv(res,path = outfile)
+    }
+    return(res)
+}
+
+
+## put histograms on the diagonal
+.panel.hist <- function(x, ...){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    x <- x[!is.infinite(x) & !is.na(x)]
+    h <- hist(x, nclass=25,plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+
+## put (absolute) correlations on the upper panels,
+## with size proportional to the correlations.
+.panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    
+    #& x>0 & y>0
+    useValue <- !is.na(x) & !is.na(y) & !is.infinite(x) & !is.infinite(y) 
+    x <- x[useValue]
+    y <- y[useValue]
+    r <- abs(cor(x, y,method = "sp"))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+.panel.point <- function(x, y){
+    #x >0 & y >0 #& is.finite(x) & is.finite(y)
+    useValue <- !is.na(x) & !is.na(y) & !is.infinite(x) & !is.infinite(y) 
+    x <- x[useValue]
+    y <- y[useValue]
+    points(x,y,cex=0.5,pch=16,col=rgb(255/255,69/255,0,0.4))
+    abline(a = 0,b = 1)
+    lines(smooth.spline(x,y),col="blue")
+}
+
+
+plotPairs=function(dat,log2=TRUE,addOne=TRUE,...){
+    if(addOne){
+        dat = dat + 1
+    }
+    if(log2){
+        dat <- log2(dat)    
+    }
+    pairs(dat,upper.panel = .panel.cor,lower.panel = .panel.point,
+          gap=0,
+          #xlim=c(-3,3),ylim=c(-3,3),
+          #labels=c("","IsobariQ","ProteinPilot"),
+          cex.labels=1.3,font.labels=2,...)    
+
+    
+}
+
+
+
+
+
+
+
 
 
 

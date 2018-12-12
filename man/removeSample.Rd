@@ -30,6 +30,5 @@ para <- reSetPeaksData(para)
 new_para <- removeSample(para,rsamples=c("batch01_QC01"))
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

@@ -35,6 +35,5 @@ sampleListFile(para) <- system.file("extdata/faahKO_sampleList.txt",
 plotPeakNumber(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

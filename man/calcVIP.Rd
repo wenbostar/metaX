@@ -28,6 +28,5 @@ res <- plsr(y~x)
 calcVIP(res,2)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

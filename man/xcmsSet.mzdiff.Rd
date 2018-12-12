@@ -24,6 +24,5 @@ para <- new("metaXpara")
 xcmsSet.mzdiff(para) <- -0.001
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

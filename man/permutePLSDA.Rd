@@ -4,8 +4,8 @@
 \alias{permutePLSDA}
 \title{permutePLSDA}
 \usage{
-permutePLSDA(x, y, n = 100, np = 2, outdir = "./", prefix = "metaX",
-  tol = 0.001, cpu = 0, ...)
+permutePLSDA(x, y, n = 100, np = 2, outdir = "./",
+  prefix = "metaX", tol = 0.001, cpu = 0, ...)
 }
 \arguments{
 \item{x}{a matrix of observations.}
@@ -35,4 +35,3 @@ pvalue
 Validation of the PLS-DA model by using permutation test 
 statistics
 }
-

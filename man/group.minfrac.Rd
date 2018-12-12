@@ -24,6 +24,5 @@ para <- new("metaXpara")
 group.minfrac(para) <- 0.3
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

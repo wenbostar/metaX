@@ -24,6 +24,5 @@ para <- new("metaXpara")
 retcor.profStep(para) <- 0.005
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

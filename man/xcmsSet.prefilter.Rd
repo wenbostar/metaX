@@ -24,6 +24,5 @@ para <- new("metaXpara")
 xcmsSet.prefilter(para) <- c(1,5000)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

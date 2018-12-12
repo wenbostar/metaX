@@ -24,6 +24,5 @@ para <- new("metaXpara")
 xcmsSet.nSlaves(para) <- 8
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

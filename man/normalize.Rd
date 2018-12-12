@@ -5,13 +5,14 @@
 \alias{normalize}
 \title{Normalisation of peak intensity}
 \usage{
-normalize(para, method = "sum", valueID = "value", norFactor = NULL, ...)
+normalize(para, method = "sum", valueID = "value", norFactor = NULL,
+  useClass = FALSE, ...)
 }
 \arguments{
 \item{para}{A metaXpara object.}
 
 \item{method}{The normalization method: sum, vsn, quantiles, 
-quantiles.robust, sum, pqn, combat. Default is sum.}
+quantiles.robust, sum, pqn, combat and tmm. Default is sum.}
 
 \item{valueID}{The name of the column which will be normalized.}
 
@@ -21,6 +22,9 @@ sample list file that contains the normalization factor value, such as the
 value "osmolality". Default the value is NULL. Only if the value of 
 norFactor is not NULL and the parameter "method" is NULL, this 
 normalization will work.}
+
+\item{useClass}{Whether or not to use class information when perform 
+batch correction using ComBat method. Default is False.}
 
 \item{...}{Additional parameter}
 }
@@ -47,6 +51,5 @@ para <- reSetPeaksData(para)
 para <- metaX::normalize(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

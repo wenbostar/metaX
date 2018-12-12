@@ -23,6 +23,5 @@ para <- new("plsDAPara")
 scale(para) <- "uv"
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

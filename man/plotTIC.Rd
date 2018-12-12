@@ -18,6 +18,5 @@ none
 Plot chromatogram of total ion count
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

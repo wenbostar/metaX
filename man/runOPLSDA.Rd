@@ -26,4 +26,3 @@ A list object
 \description{
 Perform the OPLS-DA analysis
 }
-

@@ -34,6 +34,5 @@ para <- reSetPeaksData(para)
 p <- dataClean(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

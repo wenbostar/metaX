@@ -1,21 +1,25 @@
 Package: metaX
 Type: Package
-Title: An R package for metabolomic data analysis
-Version: 1.4.19
+Title: A flexible and comprehensive software for processing omics data.
+Version: 2.0.0
 Date: 2015-02-10
 Author: Bo Wen <wenbostar@gmail.com>
 Maintainer: Bo Wen <wenbostar@gmail.com>
-Description: The package provides an integrated pipeline for metabolomic data analysis. It includes the stages peak detection, data
-    preprocessing, normalization, missing value imputation, univariate statistical
-    analysis, multivariate statistical analysis such as PCA and PLS-DA, metabolite
-    identification, pathway analysis, power analysis, feature selection and
-    modeling, data quality assessment.
-Depends: R (>= 3.2.0),VennDiagram,pROC,SSPA,methods
-Imports: Nozzle.R1,ggplot2,parallel,pcaMethods,reshape2,plyr,BBmisc,
-        mixOmics,preprocessCore,vsn,pls,impute,missForest,doParallel,DiscriMiner,
-        xcms,ape,scatterplot3d,pheatmap,bootstrap,boot,caret,dplyr,stringr,
-        RColorBrewer,DiffCorr,RCurl,lattice,faahKO,data.table,CAMERA,igraph,
-        tidyr,scales,readr,e1071,randomForest,coop,mzR,fpc,ropls,sva,ROCR,ComplexHeatmap
+Description: The package provides a integrated pipeline for mass spectrometry-
+    based metabolomic and proteomics data analysis. It includes the stages peak 
+    detection, data preprocessing, normalization, missing value imputation, 
+    univariate statistical analysis, multivariate statistical analysis such as 
+    PCA and PLS-DA, metabolite identification, pathway analysis, power analysis, 
+    feature selection and modeling, data quality assessment.
+Depends:
+    R (>= 3.2.0),VennDiagram,pROC,SSPA,methods
+Imports:
+    sva,Nozzle.R1,ggplot2,parallel,pcaMethods,reshape2,plyr,BBmisc,
+    mixOmics,preprocessCore,vsn,pls,impute,missForest,doParallel,DiscriMiner,
+    xcms,ape,scatterplot3d,pheatmap,bootstrap,boot,caret,dplyr,stringr,
+    RColorBrewer,DiffCorr,RCurl,lattice,faahKO,data.table,CAMERA,igraph,
+    tidyr,scales,readr,e1071,randomForest,coop,mzR,fpc,ropls,ROCR,edgeR,
+    softImpute,ComplexHeatmap,seriation
 License: LGPL-2
 URL: https://github.com/wenbostar/metaX
 BugReports: https://github.com/wenbostar/metaX
@@ -26,5 +30,4 @@ Suggests:
     RUnit,BiocGenerics
 VignetteBuilder: knitr
 biocViews: Metabolomics, MassSpectrometry, QualityControl
-RoxygenNote: 6.0.1
-
+RoxygenNote: 6.1.1

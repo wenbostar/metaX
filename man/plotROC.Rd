@@ -31,4 +31,17 @@ The result of feature selection and modeling
 \description{
 Perform biomarker analysis and plot ROC curve
 }
-
+\examples{
+para <- new("metaXpara")
+pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
+sfile <- system.file("extdata/MTBLS79_sampleList.txt",package = "metaX")
+rawPeaks(para) <- read.delim(pfile,check.names = FALSE)
+sampleListFile(para) <- sfile
+para <- reSetPeaksData(para)
+para <- missingValueImpute(para)
+para <- transformation(para,valueID = "value")
+# library(doMC)
+# registerDoMC(cores = 4)
+res <- featureSelection(para,group=c("C","S"), plot_roc=FALSE)
+plotROC(para,group=c("C","S"),valueID="value",fID=res$optVariables)
+}

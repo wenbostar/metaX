@@ -24,6 +24,5 @@ para <- new("metaXpara")
 xcmsSet.method(para) <- "centWave"
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

@@ -8,7 +8,7 @@
 ##' @param ncomp The number of component used in PLS-DA
 ##' @param ... Additional parameters 
 ##' @return An vector of VIP value
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' library(pls)
 ##' x <- matrix(rnorm(1000),nrow = 10,ncol = 100)
@@ -87,7 +87,13 @@ runPLSDA=function(para,plsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
                                   valueID = valueID)
     }
     
-    sampleList  <- read.delim(para@sampleListFile)
+    # sampleList  <- read.delim(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        sampleList  <- para@sampleList
+    }
     
     peaksData <- para@peaksData
     peaksData <- peaksData[peaksData$class %in% sample,]
@@ -334,7 +340,7 @@ runPLSDA=function(para,plsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
 ##' @param k k-fold
 ##' @param ... Additional parameters 
 ##' @return The PLS-DA result
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' x <- matrix(rnorm(1000),nrow = 10,ncol = 100)
 ##' y <- rep(0:1,5)
@@ -418,7 +424,7 @@ mybootPLSDA=function(dataset,ind,ncomp=2,validation="CV",k=7,
 ##' @param k k-fold
 ##' @param ... Additional parameter
 ##' @return A list
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @export
 ##' @examples
 ##' para <- new("metaXpara")
@@ -452,7 +458,13 @@ selectBestComponent=function(para,np=10,sample=NULL,t=1,method = "oscorespls",
                            valueID = valueID)
     }
     
-    sampleList  <- read.delim(para@sampleListFile)
+    # sampleList  <- read.delim(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        sampleList  <- para@sampleList
+    }
     
     peaksData <- para@peaksData
     peaksData$class <- as.character(peaksData$class)
@@ -532,7 +544,7 @@ class2ind=function(x, drop2nd = FALSE) {
 ##' @param sample Sample class used
 ##' @param valueID The column name used
 ##' @return A data.frame
-##' @author Bo Wen \email{wenbo@@genomics.cn}
+##' @author Bo Wen \email{wenbostar@@gmail.com}
 ##' @examples
 ##' para <- new("metaXpara")
 ##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
@@ -611,7 +623,13 @@ runOPLSDA=function(para,oplsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
                                   valueID = valueID)
     }
     
-    sampleList  <- read.delim(para@sampleListFile)
+    # sampleList  <- read.delim(para@sampleListFile)
+    if(is.null(para@sampleList) || is.na(para@sampleList) ||
+       nrow(para@sampleList) ==0){
+        sampleList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)    
+    }else{
+        sampleList  <- para@sampleList
+    }
     
     peaksData <- para@peaksData
     peaksData <- peaksData[peaksData$class %in% sample,]

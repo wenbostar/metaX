@@ -5,12 +5,18 @@
 \alias{plotIntDistr}
 \title{Plot the distribution of the peaks intensity}
 \usage{
-plotIntDistr(x, width = 14, ...)
+plotIntDistr(x, width = 14, sortBy = "order", rmNA = TRUE,
+  ylim = NULL, ...)
 }
 \arguments{
 \item{x}{A metaXpara object.}
 
 \item{width}{The width of pdf, default is 14.}
+
+\item{sortBy}{Sort the samples according to order (default), batch or class}
+
+\item{rmNA}{Whether or not to consider NA, default is TRUE. When this value is FALSE,
+NA will be considered as 0 then all values are +1.}
 
 \item{...}{Additional parameter}
 }
@@ -40,6 +46,5 @@ para <- metaX::normalize(para)
 plotIntDistr(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

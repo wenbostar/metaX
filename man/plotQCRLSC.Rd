@@ -29,10 +29,9 @@ para <- missingValueImpute(para)
 res <- doQCRLSC(para,cpu=1)
 plotQCRLSC(res$metaXpara)
 }
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 \seealso{
 \code{\link{doQCRLSC}}
 }
-
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}

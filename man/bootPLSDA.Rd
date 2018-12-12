@@ -42,4 +42,3 @@ A list object
 \description{
 Fit predictive models for PLS-DA
 }
-

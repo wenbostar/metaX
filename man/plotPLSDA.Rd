@@ -5,7 +5,8 @@
 \alias{plotPLSDA}
 \title{Plot PLS-DA figure}
 \usage{
-plotPLSDA(para, label = "order", valueID = "valueNorm", ncomp = 5, ...)
+plotPLSDA(para, label = "order", valueID = "valueNorm", ncomp = 5,
+  ...)
 }
 \arguments{
 \item{para}{A \code{metaXpara} object}
@@ -37,6 +38,5 @@ para <- preProcess(para=para,scale = "uv",center = TRUE,valueID = "value")
 plotPLSDA(para,valueID="value")
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

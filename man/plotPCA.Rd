@@ -6,8 +6,12 @@
 \title{Performa PCA analysis and plot PCA figure}
 \usage{
 plotPCA(para, pcaMethod = "svdImpute", valueID = "valueNorm",
-  label = "order", rmQC = TRUE, batch = FALSE, scale = "none",
-  center = FALSE, saveRds = TRUE, ...)
+  label = "order", pointLabel = NULL, pointSize = 1.4,
+  labelSize = 4, rmQC = TRUE, batch = FALSE, showCircle = TRUE,
+  showClass = TRUE, scale = "none", center = FALSE, saveRds = TRUE,
+  legendRowBatch = NULL, legendRowClass = NULL,
+  legendPosition = "top", classColor = NULL, pdfWidth = 4.38,
+  pdfHeight = 3.7, pngWidth = 4, pngHeight = 4.2, res = 120, ...)
 }
 \arguments{
 \item{para}{A \code{metaXpara} object}
@@ -16,11 +20,25 @@ plotPCA(para, pcaMethod = "svdImpute", valueID = "valueNorm",
 
 \item{valueID}{The name of the column which will be used}
 
-\item{label}{The label used for plot PCA figure, default is "order"}
+\item{label}{The label used for plot PCA figure, default is "order".
+This value can be "order" or "sample". If the value of this parameter
+is NA or NULL, then no label will be shown for each point.}
+
+\item{pointLabel}{The labels for each point, default is NULL. When users 
+want to highlight some samples, this parameter is useful.}
+
+\item{pointSize}{The size of the point, default is 1.4}
+
+\item{labelSize}{The size of the label, default is 4}
 
 \item{rmQC}{A logical indicates whether remove QC data}
 
 \item{batch}{A logical indicates whether output batch information}
+
+\item{showCircle}{Whether or not to show circle for each class, default is TRUE.}
+
+\item{showClass}{Whether or not to show class information, default is TRUE.
+This parameter is useful when users want to check the batch effect.}
 
 \item{scale}{Scaling, see \code{\link{pca}} in \pkg{pcaMethods}}
 
@@ -28,6 +46,24 @@ plotPCA(para, pcaMethod = "svdImpute", valueID = "valueNorm",
 
 \item{saveRds}{Boolean, setting the argument to TRUE to save some objects to
 disk for debug. Only useful for developer. Default is TRUE.}
+
+\item{legendRowBatch}{Specify the number of column of legend for batch. 
+Default is NULL and use the default setting.}
+
+\item{legendRowClass}{Specify the number of column of legend for group.
+Default is NULL and use the default setting.}
+
+\item{classColor}{A data frame for color setting of class}
+
+\item{pdfWidth}{Width for PDF, default is 4.38}
+
+\item{pdfHeight}{Height for PDF, default is 3.7}
+
+\item{pngWidth}{Width for PNG, default is 4 inch}
+
+\item{pngHeight}{Height for PNG, default is 4.2 inch}
+
+\item{res}{resolution for PNG, default is 120}
 
 \item{...}{Additional parameter}
 }
@@ -49,6 +85,5 @@ para <- transformation(para,valueID = "value")
 metaX::plotPCA(para,valueID="value",scale="uv",center=TRUE)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

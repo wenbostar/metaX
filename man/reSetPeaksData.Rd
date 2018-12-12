@@ -3,7 +3,7 @@
 \docType{methods}
 \name{reSetPeaksData}
 \alias{reSetPeaksData}
-\title{reSetPeaksData}
+\title{reSetPeaksData. Please note NA is converted to zero in default.}
 \usage{
 reSetPeaksData(para)
 }
@@ -14,7 +14,7 @@ reSetPeaksData(para)
 none
 }
 \description{
-reSetPeaksData
+reSetPeaksData. Please note NA is converted to zero in default.
 }
 \examples{
 para <- new("metaXpara")
@@ -25,6 +25,5 @@ sampleListFile(para) <- sfile
 para <- reSetPeaksData(para)
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

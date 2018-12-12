@@ -37,6 +37,5 @@ para <- missingValueImpute(para)
 para <- preProcess(para,valueID = "value",scale="uv")
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

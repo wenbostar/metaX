@@ -23,6 +23,5 @@ para <- new("metaXpara")
 outdir(para) <- "outdir"
 }
 \author{
-Bo Wen \email{wenbo@genomics.cn}
+Bo Wen \email{wenbostar@gmail.com}
 }
-

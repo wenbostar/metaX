@@ -38,7 +38,7 @@ see \code{\link{transformation}} in \pkg{metaX}}
 \item{\code{do}}{A logical which indicates whether to do the plsDA analysis, 
 default is TRUE}
 }}
-\author{
-Bo Wen \email{wenbo@genomics.cn}
-}
 
+\author{
+Bo Wen \email{wenbostar@gmail.com}
+}
