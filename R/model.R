@@ -197,7 +197,7 @@ runPLSDA=function(para,plsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
     pngfig <- paste(outdir,"/",prefix,"-",paste(sample,collapse = "_"),
                  "-PLSDA-score.png",sep="")
     
-    pdf(fig,width = 3.4,height = 3.4)
+    pdf(fig,width = 5,height = 5)
     
     ## plsda score plot
     if(np >=3){
