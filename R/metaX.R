@@ -660,6 +660,58 @@ setMethod("normalize",signature(para="metaXpara"),
           
 )
 
+
+##' @title Perform batch correction
+##' @description Perform batch correction
+##' @param para An metaXpara object
+##' @param valueID The name of value, default is "value"
+##' @param impute_method Missing value imputation method, default is knn.
+##' @param use_class Whether use class information, default is TRUE
+##' @param cpu The number of CPUs used for missing value imputation, 
+##' default is 1
+##' @return A new metaXpara object
+##' @exportMethod
+##' @author Bo Wen \email{wenbostar@@gmail.com}
+##' @examples 
+##' para <- new("metaXpara")
+##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
+##' sfile <- system.file("extdata/MTBLS79_sampleList.txt",package = "metaX")
+##' rawPeaks(para) <- read.delim(pfile,check.names = FALSE)
+##' sampleListFile(para) <- sfile
+##' para <- reSetPeaksData(para)
+##' para <- batchCorrect(para)
+##' para <- missingValueImpute(para)
+##' para <- transformation(para,valueID = "value")
+##' metaX::plotPCA(para,valueID="value",scale="uv",center=TRUE)
+batchCorrect=function(para, valueID="value", impute_method = "knn", 
+                      use_class=TRUE, cpu=1){
+    cat("Perform batch correction.\n")
+    ## get missing value information
+    # miss_value_id <- para@peaksData %>% 
+    #   dplyr::filter(is.na(!!valueID) | !!valueID <=0) %>% 
+    #    dplyr::select(sample,ID)
+    x <- para@peaksData
+    miss_value_id <- x[ is.na(x[,valueID]) | x[,valueID] <=0, c("sample","ID")]
+    
+    para@missValueImputeMethod <- impute_method
+    para <- missingValueImpute(para,valueID = valueID,
+                               method = impute_method, cpu = cpu)
+    para <- metaX::normalize(para,valueID=valueID, method = "combat",
+                             useClass=use_class)
+    para@peaksData$tmp_id <- paste(para@peaksData$sample,para@peaksData$ID,sep="|")
+    
+    if(nrow(miss_value_id) >= 1){
+        miss_value_id <- paste(miss_value_id$sample,miss_value_id$ID,sep="|")
+        cat("The number of missing values:",length(miss_value_id),"\n")
+        para@peaksData[para@peaksData$tmp_id %in% miss_value_id,valueID] <- 0
+        para@peaksData$tmp_id <- NULL
+    }else{
+        cat("No missing value found!\n")
+    }
+    return(para)
+    
+}
+
 ##' @title Batch correction using SVR normalization
 ##' @description Batch correction using SVR normalization
 ##' @param para A metaXpara object
