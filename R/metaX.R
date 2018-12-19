@@ -712,6 +712,7 @@ batchCorrect=function(para, valueID="value", impute_method = "knn",
     
 }
 
+
 ##' @title Batch correction using SVR normalization
 ##' @description Batch correction using SVR normalization
 ##' @param para A metaXpara object
@@ -3021,9 +3022,13 @@ setMethod("plotPeakSN", signature(x = "metaXpara"), function(x,...){
 ##' sampleListFile(para) <- system.file("extdata/faahKO_sampleList.txt", 
 ##'     package = "metaX")
 ##' plotPeakNumber(para)
-setGeneric("plotPeakNumber",function(x,...) standardGeneric("plotPeakNumber"))
+setGeneric("plotPeakNumber",function(x,
+                                     legendRowBatch = NULL, 
+                                     legendRowClass = NULL, ...) standardGeneric("plotPeakNumber"))
 ##' @describeIn plotPeakNumber
-setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,...){
+setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,
+                                                                 legendRowBatch = NULL, 
+                                                                 legendRowClass = NULL,...){
     
     ## peak number 
     
@@ -3069,6 +3074,16 @@ setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,...){
         geom_text(aes(label=ifelse(outlier,order,"")),hjust=-0.2,size=4)+
         scale_shape_manual(values=1:n_distinct(dat$batch))+
         ylab("Peaks number")
+    
+    if(!is.null(legendRowBatch)){
+        ggobj1 <- ggobj1 + guides(shape = guide_legend(nrow = legendRowBatch))    
+        
+    }
+    if(!is.null(legendRowClass)){
+        ggobj1 <- ggobj1 + guides(col = guide_legend(nrow = legendRowClass))    
+        
+    }
+    
     print(ggobj1)
     ggobj2 <- ggplot(data=dat,aes(x=order,y=missPeaksN,colour=class,shape=batch))+
         geom_point()+
