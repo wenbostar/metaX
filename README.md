@@ -9,8 +9,9 @@
 
 ``` r
 # Install the development version from GitHub:
-source("https://bioconductor.org/biocLite.R")
-biocLite("wenbostar/metaX")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("metaX")
 ```
 
 ## Usage
