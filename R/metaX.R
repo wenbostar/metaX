@@ -820,8 +820,9 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
                             by=intersect(names(peaksData),names(intPredict)))
     
     #mpa <- ddply(peaksData,.(ID),summarise,mpa=median(value,na.rm = TRUE))
-    mpa <- peaksData %>% group_by(ID) %>% summarise(mpa=median(value,na.rm = TRUE))
+    mpa <- peaksData %>% dplyr::group_by(ID) %>% dplyr::summarise(mpa=median(value,na.rm = TRUE))
     #peaksData <- plyr::join(peaksData,mpa,
+    # save(mpa,peaksData,file="test.rda")
     peaksData <- inner_join(peaksData,mpa,
                             by=intersect(names(peaksData),names(mpa)))
     peaksData <- dplyr::mutate(peaksData,valuePredict=valuePredict/mpa)
@@ -856,12 +857,14 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     #                normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
     
     cvStat <- peaksData[is.na(peaksData$class),] %>% group_by(ID,batch) %>%
-                    summarise(rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
-                              normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
+        dplyr::summarise(rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
+                         normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
     
     
-    cvStatForEachBatch <- melt(cvStat,id.vars = c("ID","batch"),
-                               variable.name = "CV")
+    #cvStatForEachBatch <- melt(cvStat,id.vars = c("ID","batch"),
+    #                           variable.name = "CV")
+    
+    cvStatForEachBatch <- cvStat %>% tidyr::gather(key = "CV", value = "value",-ID,-batch)
     cvStatForEachBatch$batch <- as.factor(cvStatForEachBatch$batch)
     
     ## output information
@@ -871,9 +874,9 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     #                 total=length(value),ratio=lessThan30/total)
     
     cvTable <- cvStatForEachBatch %>% group_by(batch,CV) %>% 
-                     summarise(lessThan30=sum(value<=0.3,na.rm = TRUE),
-                               total=length(value),
-                               ratio=lessThan30/total)
+        dplyr::summarise(lessThan30=sum(value<=0.3,na.rm = TRUE),
+                         total=length(value),
+                         ratio=lessThan30/total)
     
     
     print(cvTable)
@@ -902,12 +905,13 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     #                normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
     
     cvStat <- peaksData[is.na(peaksData$class),] %>% group_by(ID) %>%
-                    summarise(rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
-                              normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
+        dplyr::summarise(rawCV=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE),
+                         normCV=sd(valueNorm,na.rm = TRUE)/mean(valueNorm,na.rm = TRUE))
     
     
-    cvStatForAll <- melt(cvStat,id.vars = c("ID"),
-                         variable.name = "CV")
+    #cvStatForAll <- melt(cvStat,id.vars = c("ID"),
+    #                     variable.name = "CV")
+    cvStatForAll <- cvStat %>% tidyr::gather(key = "CV", value = "value", -ID)
     ## output information
     message("Summary information of the CV for QC samples:")
     #cvTable <- ddply(cvStatForAll,.(CV),summarise,
@@ -915,8 +919,8 @@ svrNormalize=function(para,ntop=5,impute=TRUE,cpu=0){
     #                 total=length(value),ratio=lessThan30/total)
     
     cvTable <- cvStatForAll %>% group_by(CV) %>% 
-        summarise(lessThan30=sum(value<=0.3,na.rm = TRUE),
-                  total=length(value),ratio=lessThan30/total)
+        dplyr::summarise(lessThan30=sum(value<=0.3,na.rm = TRUE),
+                         total=length(value),ratio=lessThan30/total)
     print(cvTable)
     res$cvAll <- cvTable
     message("\n")
@@ -3745,14 +3749,14 @@ setMethod("plotHeatMap", signature(para = "metaXpara"),
                   cat("seriation ...\n")
                   o1 <- seriation::seriate(dist(x),method="GW")
                   o2 <- seriation::seriate(dist(t(x)),method="GW")
-                  hp1 <- Heatmap(x %>% as.data.frame(),
+                  hp1 <- Heatmap(x %>% as.matrix(),
                                  cluster_rows = as.dendrogram(o1[[1]]),
                                  cluster_columns = as.dendrogram(o2[[1]]),
                                  show_row_names = show_rownames,
                                  show_column_names = show_colnames,
                                  top_annotation = ha,name = "",...)
               }else{
-                  hp1 <- Heatmap(x %>% as.data.frame(),
+                  hp1 <- Heatmap(x %>% as.matrix(),
                                  show_row_names = show_rownames,
                                  show_column_names = show_colnames,
                                  top_annotation = ha,name = "",...)
