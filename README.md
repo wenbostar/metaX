@@ -11,7 +11,7 @@
 # Install the development version from GitHub:
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install("metaX")
+BiocManager::install("wenbostar/metaX")
 ```
 
 ## Usage
