@@ -3891,21 +3891,34 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                   theme_bw()+
                   geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                   #ylab("Peaks number")+
-                  xlab("Percent of missing value")+
-                  ggtitle(label = paste("Total peaks:",nrow(nm),
-                                        "; total samples:",
-                                        length(unique(peaksData$sample))))
+                  xlab("Percent of missing value")#+
+                  
               
               if(is_metabolite(para)){
-                  ggobj1 <- ggobj1 + ylab("# of peaks")
+                  ggobj1 <- ggobj1 + ylab("# of peaks")+
+                      ggtitle(label = paste("Total peaks:",nrow(nm),
+                                            "; total samples:",
+                                            length(unique(peaksData$sample))))
               }else if(is_protein(para)){
-                  ggobj1 <- ggobj1 + ylab("# of proteins")
+                  ggobj1 <- ggobj1 + ylab("# of proteins")+
+                      ggtitle(label = paste("Total proteins:",nrow(nm),
+                                            "; total samples:",
+                                            length(unique(peaksData$sample))))
               }else if(is_gene(para)){
-                  ggobj1 <- ggobj1 + ylab("# of genes")
+                  ggobj1 <- ggobj1 + ylab("# of genes")+
+                      ggtitle(label = paste("Total genes:",nrow(nm),
+                                            "; total samples:",
+                                            length(unique(peaksData$sample))))
               }else if(is_mrna(para)){
-                  ggobj1 <- ggobj1 + ylab("# of mRNAs")
+                  ggobj1 <- ggobj1 + ylab("# of mRNAs")+
+                      ggtitle(label = paste("Total mRNAs:",nrow(nm),
+                                            "; total samples:",
+                                            length(unique(peaksData$sample))))
               }else{
-                  ggobj1 <- ggobj1 + ylab("# of peaks")
+                  ggobj1 <- ggobj1 + ylab("# of peaks")+
+                      ggtitle(label = paste("Total peaks:",nrow(nm),
+                                            "; total samples:",
+                                            length(unique(peaksData$sample))))
               }
               
               
