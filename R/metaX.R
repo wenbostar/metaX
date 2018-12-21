@@ -3051,6 +3051,8 @@ is_mrna=function(para){
 }
 
 
+
+
 ##' @title Plot the distribution of the peaks number
 ##' @description  Plot the distribution of the raw peaks number without 
 ##' post-processing. This function not only generates a figure, but also 
@@ -3125,19 +3127,9 @@ setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,
         geom_point()+
         theme_bw()+
         geom_text(aes(label=ifelse(outlier,order,"")),hjust=-0.2,size=4)+
-        scale_shape_manual(values=1:n_distinct(dat$batch))
+        scale_shape_manual(values=1:n_distinct(dat$batch))+
+        ylab(paste("# of ",x@dataType,"s",sep=""))
     
-    if(is_metabolite(x)){
-        ggobj1 <- ggobj1 + ylab("# of peaks")
-    }else if(is_protein(x)){
-        ggobj1 <- ggobj1 + ylab("# of proteins")
-    }else if(is_gene(x)){
-        ggobj1 <- ggobj1 + ylab("# of genes")
-    }else if(is_mrna(x)){
-        ggobj1 <- ggobj1 + ylab("# of mRNAs")
-    }else{
-        ggobj1 <- ggobj1 + ylab("# of peaks")
-    }
     
     if(!is.null(legendRowBatch)){
         ggobj1 <- ggobj1 + guides(shape = guide_legend(nrow = legendRowBatch))    
@@ -3153,19 +3145,9 @@ setMethod("plotPeakNumber", signature(x = "metaXpara"), function(x,
         geom_point()+
         theme_bw()+
         geom_text(aes(label=ifelse(outlier,order,"")),hjust=-0.2,size=4)+
-        scale_shape_manual(values=1:n_distinct(dat$batch))
+        scale_shape_manual(values=1:n_distinct(dat$batch))+
+        ylab(paste("# of missing ",x@dataType,"s",sep=""))
     
-    if(is_metabolite(x)){
-        ggobj2 <- ggobj2 + ylab("# of missing peaks")
-    }else if(is_protein(x)){
-        ggobj2 <- ggobj2 + ylab("# of missing proteins")
-    }else if(is_gene(x)){
-        ggobj2 <- ggobj2 + ylab("# of missing genes")
-    }else if(is_mrna(x)){
-        ggobj2 <- ggobj2 + ylab("# of missing mRNAs")
-    }else{
-        ggobj2 <- ggobj2 + ylab("# of missing peaks")
-    }
     
     print(ggobj2)
     dev.off()
@@ -3261,19 +3243,9 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
         #ylab("Percent of peaks")+
         theme(legend.position=c(1,0),legend.justification=c(1,0))+
         #ggtitle("The CV distribution of the intensity")+
-        xlab("CV")
-    
-    if(is_metabolite(x)){
-        ggobj1 <- ggobj1 + ylab("Percent of peaks")
-    }else if(is_protein(x)){
-        ggobj1 <- ggobj1 + ylab("Percent of proteins")
-    }else if(is_gene(x)){
-        ggobj1 <- ggobj1 + ylab("Percent of genes")
-    }else if(is_mrna(x)){
-        ggobj1 <- ggobj1 + ylab("Percent of mRNAs")
-    }else{
-        ggobj1 <- ggobj1 + ylab("Percent of peaks")
-    }
+        xlab("CV")+
+        ylab(paste("Percent of ",x@dataType,"s",sep=""))
+
     
     print(ggobj1)
     ## only show cv between 0 and 1
@@ -3281,23 +3253,12 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
         geom_line()+
         theme_bw()+
         geom_vline(xintercept=c(0.2,0.3),linetype=2)+
-        #ylab("Percent of peaks")+
+        ylab(paste("Percent of ",x@dataType,"s",sep=""))+
         theme(legend.position=c(1,0),legend.justification=c(1,0))+
         xlab("CV")+
         #ggtitle("The CV distribution of the intensity")+
         coord_cartesian(xlim=c(-0.05,1.05))
     
-    if(is_metabolite(x)){
-        ggobj2 <- ggobj2 + ylab("Percent of peaks")
-    }else if(is_protein(x)){
-        ggobj2 <- ggobj2 + ylab("Percent of proteins")
-    }else if(is_gene(x)){
-        ggobj2 <- ggobj2 + ylab("Percent of genes")
-    }else if(is_mrna(x)){
-        ggobj2 <- ggobj2 + ylab("Percent of mRNAs")
-    }else{
-        ggobj2 <- ggobj2 + ylab("Percent of peaks")
-    }
     
     print(ggobj2)
     
@@ -3330,20 +3291,9 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
             geom_vline(xintercept=c(0.2,0.3),linetype=2)+
             theme(legend.position=c(1,0),legend.justification=c(1,0))+
             #ylab("Percent of peaks")+
-            xlab("CV")
+            xlab("CV")+
+            ylab(paste("Percent of ",x@dataType,"s",sep=""))
             #ggtitle("The CV distribution of the normalized intensity")
-        
-        if(is_metabolite(x)){
-            ggobj <- ggobj + ylab("Percent of peaks")
-        }else if(is_protein(x)){
-            ggobj <- ggobj + ylab("Percent of proteins")
-        }else if(is_gene(x)){
-            ggobj <- ggobj + ylab("Percent of genes")
-        }else if(is_mrna(x)){
-            ggobj <- ggobj + ylab("Percent of mRNAs")
-        }else{
-            ggobj <- ggobj + ylab("Percent of peaks")
-        }
         
         print(ggobj)
         ## only show cv between 0 and 1
@@ -3351,23 +3301,12 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
             geom_line()+
             theme_bw()+
             geom_vline(xintercept=c(0.2,0.3),linetype=2)+
-            #ylab("Percent of peaks")+
+            ylab(paste("Percent of ",x@dataType,"s",sep=""))+
             theme(legend.position=c(1,0),legend.justification=c(1,0))+
             xlab("CV")+
             #ggtitle("The CV distribution of the normalized intensity")+
             coord_cartesian(xlim=c(-0.05,1.05))
         
-        if(is_metabolite(x)){
-            ggobj <- ggobj + ylab("Percent of peaks")
-        }else if(is_protein(x)){
-            ggobj <- ggobj + ylab("Percent of proteins")
-        }else if(is_gene(x)){
-            ggobj <- ggobj + ylab("Percent of genes")
-        }else if(is_mrna(x)){
-            ggobj <- ggobj + ylab("Percent of mRNAs")
-        }else{
-            ggobj <- ggobj + ylab("Percent of peaks")
-        }
         
         print(ggobj)
         
@@ -3412,7 +3351,7 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
             geom_line()+
             theme_bw()+
             geom_vline(xintercept=c(0.2,0.3),linetype=2)+
-            ylab("Percent of peaks")+
+            ylab(paste("Percent of ",x@dataType,"s",sep=""))+
             theme(legend.position=c(1,0),legend.justification=c(1,0),
                   legend.box.just="right")+
             xlab("CV")+
@@ -3896,35 +3835,13 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                   theme_bw()+
                   geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                   #ylab("Peaks number")+
-                  xlab("Percent of missing value")#+
+                  xlab("Percent of missing value") + 
+                  ylab(paste("# of ",para@dataType,"s",sep=""))+
+                  ggtitle(label = paste("Total ",para@dataType,"s:",nrow(nm),
+                                        "; total samples:",
+                                        length(unique(peaksData$sample)),sep=""))
                   
               
-              if(is_metabolite(para)){
-                  ggobj1 <- ggobj1 + ylab("# of peaks")+
-                      ggtitle(label = paste("Total peaks:",nrow(nm),
-                                            "; total samples:",
-                                            length(unique(peaksData$sample))))
-              }else if(is_protein(para)){
-                  ggobj1 <- ggobj1 + ylab("# of proteins")+
-                      ggtitle(label = paste("Total proteins:",nrow(nm),
-                                            "; total samples:",
-                                            length(unique(peaksData$sample))))
-              }else if(is_gene(para)){
-                  ggobj1 <- ggobj1 + ylab("# of genes")+
-                      ggtitle(label = paste("Total genes:",nrow(nm),
-                                            "; total samples:",
-                                            length(unique(peaksData$sample))))
-              }else if(is_mrna(para)){
-                  ggobj1 <- ggobj1 + ylab("# of mRNAs")+
-                      ggtitle(label = paste("Total mRNAs:",nrow(nm),
-                                            "; total samples:",
-                                            length(unique(peaksData$sample))))
-              }else{
-                  ggobj1 <- ggobj1 + ylab("# of peaks")+
-                      ggtitle(label = paste("Total peaks:",nrow(nm),
-                                            "; total samples:",
-                                            length(unique(peaksData$sample))))
-              }
               
               
               print(ggobj1)
@@ -3948,37 +3865,11 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                           theme_bw()+
                           geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                           #ylab("Peaks number")+
-                          xlab("Percent of missing value")
-                          #ggtitle(label = paste("Total peaks:",nrow(nm),
-                          #                      "; total samples (non-QC):",
-                          #                      length(unique(peaksData$sample[!is.na(peaksData$class)]))))
-                      
-                      if(is_metabolite(para)){
-                          ggobj <- ggobj + ylab("# of peaks") +
-                              ggtitle(label = paste("Total peaks:",nrow(nm),
-                                                    "; total samples (non-QC):",
-                                                    length(unique(peaksData$sample[!is.na(peaksData$class)]))))
-                      }else if(is_protein(para)){
-                          ggobj <- ggobj + ylab("# of proteins") +
-                              ggtitle(label = paste("Total proteins:",nrow(nm),
-                                                    "; total samples (non-QC):",
-                                                    length(unique(peaksData$sample[!is.na(peaksData$class)]))))
-                      }else if(is_gene(para)){
-                          ggobj <- ggobj + ylab("# of genes") +
-                              ggtitle(label = paste("Total genes:",nrow(nm),
-                                                    "; total samples (non-QC):",
-                                                    length(unique(peaksData$sample[!is.na(peaksData$class)]))))
-                      }else if(is_mrna(para)){
-                          ggobj <- ggobj + ylab("# of mRNAs") +
-                              ggtitle(label = paste("Total mRNAs:",nrow(nm),
-                                                    "; total samples (non-QC):",
-                                                    length(unique(peaksData$sample[!is.na(peaksData$class)]))))
-                      }else{
-                          ggobj <- ggobj + ylab("# of peaks") +
-                              ggtitle(label = paste("Total peaks:",nrow(nm),
-                                                    "; total samples (non-QC):",
-                                                    length(unique(peaksData$sample[!is.na(peaksData$class)]))))
-                      }
+                          xlab("Percent of missing value")+
+                          ylab(paste("# of ",para@dataType,"s",sep=""))+
+                          ggtitle(label = paste("Total ",para@dataType,"s:",nrow(nm),
+                                                "; total samples (non-QC):",
+                                                length(unique(peaksData$sample[!is.na(peaksData$class)])),sep=""))
                       
                       print(ggobj)
                   }
@@ -3998,37 +3889,12 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                       scale_x_continuous(breaks=dat$breaks)+
                       geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                       #ylab("Peaks number")+
-                      xlab("Percent of missing value")#+
-                      #ggtitle(label = paste("Total peaks:",nrow(nm),
-                      #                      "; total samples (only QC):",
-                      #                      length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  
-                  if(is_metabolite(para)){
-                      ggobj <- ggobj + ylab("# of peaks") +
-                          ggtitle(label = paste("Total peaks:",nrow(nm),
-                                                "; total samples (only QC):",
-                                                length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  }else if(is_protein(para)){
-                      ggobj <- ggobj + ylab("# of proteins") +
-                          ggtitle(label = paste("Total proteins:",nrow(nm),
-                                                "; total samples (only QC):",
-                                                length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  }else if(is_gene(para)){
-                      ggobj <- ggobj + ylab("# of genes") +
-                          ggtitle(label = paste("Total genes:",nrow(nm),
-                                                "; total samples (only QC):",
-                                                length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  }else if(is_mrna(para)){
-                      ggobj <- ggobj + ylab("# of mRNAs") +
-                          ggtitle(label = paste("Total mRNAs:",nrow(nm),
-                                                "; total samples (only QC):",
-                                                length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  }else{
-                      ggobj <- ggobj + ylab("# of peaks") +
-                          ggtitle(label = paste("Total peaks:",nrow(nm),
-                                                "; total samples (only QC):",
-                                                length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  }
+                      xlab("Percent of missing value")+
+                      ylab(paste("# of "),para@dataType,"s",sep="") +
+                      ggtitle(label = paste("Total ",para@dataType,"s:",nrow(nm),
+                                            "; total samples (only QC):",
+                                            length(unique(peaksData$sample[is.na(peaksData$class)])),sep=""))
+                     
                   
                   print(ggobj)
                   
@@ -4038,22 +3904,11 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                       scale_x_continuous(breaks=dat$breaks)+
                       #geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                       #ylab("Peaks number")+
-                      xlab("Percent of missing value")
+                      xlab("Percent of missing value")+
+                      ylab(paste("# of ",para@dataType,"s",sep=""))
                       #ggtitle(label = paste("Total peaks:",nrow(nm),
                       #                      "; total samples (only QC):",
                       #                      length(unique(peaksData$sample[is.na(peaksData$class)]))))
-                  
-                  if(is_metabolite(para)){
-                      ggobj3 <- ggobj3 + ylab("# of peaks")
-                  }else if(is_protein(para)){
-                      ggobj3 <- ggobj3 + ylab("# of proteins")
-                  }else if(is_gene(para)){
-                      ggobj3 <- ggobj3 + ylab("# of genes")
-                  }else if(is_mrna(para)){
-                      ggobj3 <- ggobj3 + ylab("# of mRNAs")
-                  }else{
-                      ggobj3 <- ggobj3 + ylab("# of peaks")
-                  }
                   
                   print(ggobj3)
                   
