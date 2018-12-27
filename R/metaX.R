@@ -2034,7 +2034,7 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               png(filename = fig,width = pngWidth,height = pngHeight,res = res,units = "in")
               print(ggobj)
               dev.off()
-              res <- list(fig=fig,highfig=highfig,pca=pca.res)
+              res <- list(fig=fig,highfig=highfig,pca=pca.res,plotdata=plotData)
               return(res)
               
           }
