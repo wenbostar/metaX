@@ -3890,7 +3890,7 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                       geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                       #ylab("Peaks number")+
                       xlab("Percent of missing value")+
-                      ylab(paste("# of "),para@dataType,"s",sep="") +
+                      ylab(paste("# of ",para@dataType,"s",sep="")) +
                       ggtitle(label = paste("Total ",para@dataType,"s:",nrow(nm),
                                             "; total samples (only QC):",
                                             length(unique(peaksData$sample[is.na(peaksData$class)])),sep=""))
