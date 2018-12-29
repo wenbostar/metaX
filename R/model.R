@@ -584,11 +584,23 @@ setMethod("getPeaksTable", signature(para = "metaXpara"),
 ##' @param sample Sample class
 ##' @param valueID The name of column used
 ##' @param label The label used for plot
+##' @param labelSize The size of label, default is 4
+##' @param pointSize The size of point, default is 1.4
 ##' @param ... additional arguments
 ##' @return A list object
 ##' @export
+##' @examples
+##' para <- new("metaXpara")
+##' pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
+##' sfile <- system.file("extdata/MTBLS79_sampleList.txt",package = "metaX")
+##' rawPeaks(para) <- read.delim(pfile,check.names = FALSE)
+##' sampleListFile(para) <- sfile
+##' para <- reSetPeaksData(para)
+##' para <- missingValueImpute(para)
+##' oplsdaPara <- new("oplsDAPara")
+##' runOPLSDA(para,oplsdaPara,sample=c("C","S"),valueID="value",labelSize = 2)
 runOPLSDA=function(para,oplsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
-                  label="order",...){
+                  label="order",labelSize=4,pointSize=1.4,...){
     
     ptm <- proc.time()
     
@@ -690,8 +702,8 @@ runOPLSDA=function(para,oplsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
     
     ## pvalue
     result$pvalue <- list()
-    result$pvalue$R2 <- sum(result$perm$R2Y[result$perm$cor<1] > result$R2Y)/n
-    result$pvalue$Q2 <- sum(result$perm$Q2Y[result$perm$cor<1] > result$Q2)/n
+    result$pvalue$R2 <- (1+sum(result$perm$R2Y[result$perm$cor<1] > result$R2Y))/n
+    result$pvalue$Q2 <- (1+sum(result$perm$Q2Y[result$perm$cor<1] > result$Q2))/n
     
     message("P-value R2Y: ",result$pvalue$R2)
     message("P-value Q2Y: ",result$pvalue$Q2)
@@ -723,7 +735,7 @@ runOPLSDA=function(para,oplsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
     ggobj <-ggplot(data = plotData,aes(x=x,y=y,colour=class))+
         geom_hline(yintercept=0,colour="gray")+
         geom_vline(xintercept=0,colour="gray")+
-        geom_point()+
+        geom_point(size=pointSize)+
         #theme(legend.position="top")+
         #guides(col=guide_legend(nrow=1))+
         theme_bw()+
@@ -749,9 +761,9 @@ runOPLSDA=function(para,oplsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
         theme(legend.position="top")
     
     if(label == "order"){
-        ggobj <- ggobj + geom_text(aes(label=order),size=4,hjust=-0.2)
+        ggobj <- ggobj + geom_text(aes(label=order),size=labelSize,hjust=-0.2)
     }else if(label == "sample"){
-        ggobj <- ggobj + geom_text(aes(label=sample),size=4,hjust=-0.2)
+        ggobj <- ggobj + geom_text(aes(label=sample),size=labelSize,hjust=-0.2)
     }
     
     print(ggobj)
@@ -781,8 +793,8 @@ runOPLSDA=function(para,oplsdaPara,auc=TRUE,sample=NULL,valueID="valueNorm",
     #abline(lm.q,lty=2,col="red")
     legend("bottomright",pch=c(16,15),legend = c("R2","Q2"),col=c("blue","red"))
     
-    #title(main = paste("Intercepts:","R2=(0.0,",sprintf("%.4f",int.R),
-    #                   "), Q2=(0.0,",sprintf("%.4f",int.Q),")"))
+    title(main = paste("p-value(R2Y)=",sprintf("%.3f",result$pvalue$R2),
+                       ", p-value(Q2Y)=",sprintf("%.3f",result$pvalue$Q2)),cex.main=0.6)
     dev.off()
     
     ## calc AUROC for PLS-DA

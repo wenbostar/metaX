@@ -5,7 +5,8 @@
 \title{run OPLS-DA}
 \usage{
 runOPLSDA(para, oplsdaPara, auc = TRUE, sample = NULL,
-  valueID = "valueNorm", label = "order", ...)
+  valueID = "valueNorm", label = "order", labelSize = 4,
+  pointSize = 1.4, ...)
 }
 \arguments{
 \item{para}{An object of metaXpara}
@@ -18,6 +19,10 @@ runOPLSDA(para, oplsdaPara, auc = TRUE, sample = NULL,
 
 \item{label}{The label used for plot}
 
+\item{labelSize}{The size of label, default is 4}
+
+\item{pointSize}{The size of point, default is 1.4}
+
 \item{...}{additional arguments}
 }
 \value{
@@ -25,4 +30,15 @@ A list object
 }
 \description{
 Perform the OPLS-DA analysis
+}
+\examples{
+para <- new("metaXpara")
+pfile <- system.file("extdata/MTBLS79.txt",package = "metaX")
+sfile <- system.file("extdata/MTBLS79_sampleList.txt",package = "metaX")
+rawPeaks(para) <- read.delim(pfile,check.names = FALSE)
+sampleListFile(para) <- sfile
+para <- reSetPeaksData(para)
+para <- missingValueImpute(para)
+oplsdaPara <- new("oplsDAPara")
+runOPLSDA(para,oplsdaPara,sample=c("C","S"),valueID="value",labelSize = 2)
 }
