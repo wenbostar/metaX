@@ -2338,8 +2338,10 @@ setMethod("reSetPeaksData", signature(para = "metaXpara"), function(para){
     if(is.null(para@sampleList) || is.na(para@sampleList) ||
        nrow(para@sampleList) ==0){
         samList  <- read.delim(para@sampleListFile,stringsAsFactors = FALSE)  
+        samList$class <- as.character(samList$class)
         para@sampleList <- samList
     }else{
+        para@sampleList$class <- as.character(para@sampleList$class)
         samList  <- para@sampleList
     }
     
