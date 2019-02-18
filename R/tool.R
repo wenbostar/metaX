@@ -643,8 +643,10 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
     
     
     if(pclean==TRUE){
-        message("data clean...")
-        para <- dataClean(para,valueID = "valueNorm",...)
+        if(hasQC(para)){
+            message("data clean...")
+            para <- dataClean(para,valueID = "valueNorm",...)
+        }
     }
     
     if(doQA==TRUE){
@@ -775,7 +777,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
     if(!is.null(para@ratioPairs) && para@ratioPairs != ""){
         ## only perform this analysis when a user provides comparison group
         ## information. 
-        para <- peakStat(para = para,plsdaPara = plsdaPara,doROC=doROC,pcaLabel=pcaLabel,classColor = pcaColor)
+        para <- peakStat(para = para,plsdaPara = plsdaPara,doROC=doROC,pcaLabel=pcaLabel,classColor = classCol)
         
         ## add identification result
         if(!is.null(idres)){
