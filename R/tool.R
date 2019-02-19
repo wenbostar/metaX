@@ -209,7 +209,8 @@ setGeneric("metaXpipe",function(para,plsdaPara,cvFilter = 0.3,remveOutlier=TRUE,
                               pclean=TRUE,t=1,scale="uv",idres=NULL,center=TRUE,
                               nor.order=1,out.rmqc=FALSE,saveRds=TRUE,cpu=0,
                               missValueRatioQC=0.5,missValueRatioSample=0.8,
-                              pcaLabel="none",classCol=NULL,...) 
+                              pcaLabel="none",classCol=NULL,
+                              fig_width_boxplot = 9.5,...) 
     standardGeneric("metaXpipe"))
 ##' @describeIn metaXpipe
 setMethod("metaXpipe", signature(para = "metaXpara"),
@@ -218,7 +219,8 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
                    pclean=TRUE,t=1,scale="uv",idres=NULL,center=TRUE,nor.order=1,
                    out.rmqc=FALSE,saveRds=TRUE,cpu=0,
                    missValueRatioQC=0.5,missValueRatioSample=0.8,
-                   pcaLabel="none",classCol=NULL,...){
+                   pcaLabel="none",classCol=NULL,
+                   fig_width_boxplot = 9.5,...){
     
     if(is.null(para@sampleList) || is.na(para@sampleList) ||
         nrow(para@sampleList) ==0){
@@ -365,7 +367,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
         
         
         message("plot peak intensity distribution...")
-        fig <- plotIntDistr(para,width = 9.15)
+        fig <- plotIntDistr(para,width = fig_width_boxplot)
         fig1 <- paste("data/",basename(fig$fig),sep="")
         fig2 <- paste("data/",basename(fig$highfig),sep="")
         s3_sub1 <- addTo(s3_sub1,
@@ -674,7 +676,7 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
             message("plot peak intensity distribution...")
             pp <- para
             pp@peaksData$value <- pp@peaksData$valueNorm
-            fig <- plotIntDistr(pp,width = 9.15)
+            fig <- plotIntDistr(pp,width = fig_width_boxplot)
             fig1 <- paste("data/",basename(fig$fig),sep="")
             fig2 <- paste("data/",basename(fig$highfig),sep="")
             s3_sub1 <- addTo(s3_sub1,
