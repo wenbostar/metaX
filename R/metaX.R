@@ -2345,6 +2345,7 @@ setMethod("reSetPeaksData", signature(para = "metaXpara"), function(para){
         samList  <- para@sampleList
     }
     
+    rawPeaks$name <- as.character(rawPeaks$name)
     row.names(rawPeaks) <- rawPeaks$name
     rawPeaks <- rawPeaks[,names(rawPeaks) %in% samList$sample]  
     rawPeaks$ID <- row.names(rawPeaks)

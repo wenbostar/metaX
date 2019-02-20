@@ -230,6 +230,8 @@ setMethod("metaXpipe", signature(para = "metaXpara"),
     }
               
     checkSampleList(sampleList)
+    
+    check_input_data_format(para@rawPeaks)
               
     if(is.null(para@ratioPairs)){
         stop("Please set the value of ratioPairs!")
@@ -1446,6 +1448,26 @@ checkSampleList=function(file=NULL){
         
     }
     
+}
+
+check_input_data_format=function(x){
+    
+    cat("Check sample names and feature names!\n")
+    if(is.data.frame(x)){
+        a <- x
+    }else{
+        a <- read.delim(x,stringsAsFactors = FALSE,check.names = FALSE)
+    }
+    ## sample name
+    nsample <- sum(table(names(a)) >=2)
+    if(nsample >= 1){
+        stop("There are multiple samples having the same name!!!\n")
+    }
+    
+    nfeature <- sum(table(a$name) >=2)
+    if(nfeature >= 1){
+        stop("There are multiple features having the same name!!!\n")
+    }
 }
 
 
