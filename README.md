@@ -1,4 +1,8 @@
 ## metaX
+
+[![HitCount](http://hits.dwyl.io/wenbostar/metaX.svg)](http://hits.dwyl.io/wenbostar/metaX)
+
+
 *[metaX](http://metax.genomics.cn)*: An Automatic and Comprehensive Pipeline for Processing Untargeted Metabolomics Data. Please go to the website of metaX to find more information about metaX: *[http://metax.genomics.cn](http://metax.genomics.cn)*.
 
 [![Join the chat at https://gitter.im/metaX-metabolomics/Lobby](https://badges.gitter.im/metaX-metabolomics/Lobby.svg)](https://gitter.im/metaX-metabolomics/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
