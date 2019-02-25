@@ -1625,7 +1625,7 @@ setMethod("peakStat", signature(para = "metaXpara",plsdaPara = "plsDAPara"),
                   fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = TRUE,
                                         rmQC = FALSE,label = pcaLabel,...)
                   ## no QC, no batch
-                  ppca@prefix <- paste(ppca@prefix,"-nomatch-noqc",sep="")
+                  ppca@prefix <- paste(ppca@prefix,"-nobatch-noqc",sep="")
                   fig <- metaX::plotPCA(ppca,valueID = "valueNorm",scale = "none",batch = FALSE,
                                         rmQC = TRUE,label = pcaLabel,...)
                   
