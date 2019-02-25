@@ -1818,7 +1818,8 @@ setGeneric("plotPCA",function(para,pcaMethod="svdImpute",valueID="valueNorm",
                               legendPosition="top",
                               classColor = NULL,
                               pdfWidth = 4.38,pdfHeight = 3.7,
-                              pngWidth = 4,pngHeight = 4.2, res = 120,...)
+                              pngWidth = 4,pngHeight = 4.2, res = 120,
+                              plot3d=FALSE,...)
     standardGeneric("plotPCA"))
 ##' @describeIn plotPCA
 setMethod("plotPCA", signature(para = "metaXpara"), 
@@ -1830,7 +1831,8 @@ setMethod("plotPCA", signature(para = "metaXpara"),
                    legendPosition="top",
                    classColor = NULL,
                    pdfWidth = 4.38,pdfHeight = 3.7,
-                   pngWidth = 4.5,pngHeight = 4.1, res = 120,...){
+                   pngWidth = 4.5,pngHeight = 4.1, res = 120,
+                   plot3d=FALSE,...){
               
               message("plot PCA for value '",valueID,"'")
               
@@ -2004,31 +2006,33 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               
               print(ggobj)
               
-              ## 3D PCA plot
-              #par(mgp=c(1.6,1,0))
-              col <- as.numeric(as.factor(plotData$class))
-              s3d <- scatterplot3d(plotData$x,plotData$y,plotData$z,type="h",angle = 24,
-                                   col.grid="lightblue",lty.hplot=2,pch="",color="gray",
-                                   xlab = paste("PC1"," (",
-                                                sprintf("%.2f%%",100*pca.res@R2[1]),") ",sep=""),
-                                   ylab = paste("PC2"," (",
-                                                sprintf("%.2f%%",100*pca.res@R2[2]),") ",sep=""),
-                                   zlab = paste("PC3"," (",
-                                                sprintf("%.2f%%",100*pca.res@R2[3]),") ",sep="")
-              )#color = as.numeric(as.factor(plotData$class)))
-              s3d$points(plotData$x,plotData$y,plotData$z, pch = 1,col = col)
-              s3d.coords <- s3d$xyz.convert(plotData$x,plotData$y,plotData$z)
-              text(s3d.coords$x, s3d.coords$y, labels = plotData$order,
-                   pos = 4,cex=0.5,col = col)
               
-              
-              
-              classLabel <- levels(as.factor(plotData$class))
-              legend(s3d$xyz.convert(max(plotData$x)*0.7, 
-                                     max(plotData$y), min(plotData$z)), 
-                     col=as.numeric(as.factor(classLabel)), yjust=0,pch=1,
-                     legend = classLabel, cex = 0.8)
-              
+              if(plot3d==TRUE){
+                  ## 3D PCA plot
+                  #par(mgp=c(1.6,1,0))
+                  col <- as.numeric(as.factor(plotData$class))
+                  s3d <- scatterplot3d(plotData$x,plotData$y,plotData$z,type="h",angle = 24,
+                                       col.grid="lightblue",lty.hplot=2,pch="",color="gray",
+                                       xlab = paste("PC1"," (",
+                                                    sprintf("%.2f%%",100*pca.res@R2[1]),") ",sep=""),
+                                       ylab = paste("PC2"," (",
+                                                    sprintf("%.2f%%",100*pca.res@R2[2]),") ",sep=""),
+                                       zlab = paste("PC3"," (",
+                                                    sprintf("%.2f%%",100*pca.res@R2[3]),") ",sep="")
+                  )#color = as.numeric(as.factor(plotData$class)))
+                  s3d$points(plotData$x,plotData$y,plotData$z, pch = 1,col = col)
+                  s3d.coords <- s3d$xyz.convert(plotData$x,plotData$y,plotData$z)
+                  text(s3d.coords$x, s3d.coords$y, labels = plotData$order,
+                       pos = 4,cex=0.5,col = col)
+                  
+                  
+                  
+                  classLabel <- levels(as.factor(plotData$class))
+                  legend(s3d$xyz.convert(max(plotData$x)*0.7, 
+                                         max(plotData$y), min(plotData$z)), 
+                         col=as.numeric(as.factor(classLabel)), yjust=0,pch=1,
+                         legend = classLabel, cex = 0.8)
+              }
               dev.off()
               
               png(filename = fig,width = pngWidth,height = pngHeight,res = res,units = "in")
