@@ -2349,14 +2349,21 @@ setMethod("reSetPeaksData", signature(para = "metaXpara"), function(para){
         samList  <- para@sampleList
     }
     
-    rawPeaks$name <- as.character(rawPeaks$name)
-    row.names(rawPeaks) <- rawPeaks$name
-    rawPeaks <- rawPeaks[,names(rawPeaks) %in% samList$sample]  
-    rawPeaks$ID <- row.names(rawPeaks)
-    peaksData <- melt(rawPeaks,id.vars = "ID",variable.name = "sample")
-    peaksData <- plyr::join(peaksData,samList,by="sample")
-    message("Convert NA to 0:",sum(is.na(peaksData$value)))
-    peaksData$value[is.na(peaksData$value)] <- 0
+    if("ID" %in% names(rawPeaks)){
+        rawPeaks$ID <- as.character(rawPeaks$ID)
+    }else if("name" %in% names(rawPeaks)){
+        rawPeaks <- rawPeaks %>% dplyr::rename(ID=name)
+        rawPeaks$ID <- as.character(rawPeaks$ID)
+    }else{
+        stop("No valid ID found!\n")
+    }
+    
+    peaksData <- rawPeaks %>% tidyr::gather(key = "sample",value = "value",-ID)
+    peaksData <- dplyr::inner_join(peaksData,samList,by="sample")
+    #message("Convert NA to 0:",sum(is.na(peaksData$value)))
+    message("Convert <=0 to NA:",sum(peaksData$value<=0,na.rm = TRUE))
+    #peaksData$value[is.na(peaksData$value)] <- 0
+    peaksData$value[peaksData$value<=0] <- NA
     para@peaksData <- peaksData
     
     return(para)
@@ -3224,7 +3231,9 @@ setMethod("plotCV", signature(x = "metaXpara"), function(x,valueID="value",...){
     #cvTmp <- ddply(peaksData,.(ID,class),summarise,
     #               cv=sd(value,na.rm = TRUE)/mean(value,na.rm = TRUE))
     cvTmp <- peaksData %>% group_by(ID,class) %>% 
-                mutate_(need_value=valueID) %>% 
+                dplyr::filter(!is.na(!!rlang::sym(valueID))) %>%
+                #mutate_(need_value=valueID) %>% 
+                mutate(need_value=!!rlang::sym(valueID)) %>% 
                 dplyr::summarise(cv=sd(need_value,na.rm = TRUE)/mean(need_value,na.rm = TRUE)) %>%
                 ungroup()
     cvDat <- data.frame()
