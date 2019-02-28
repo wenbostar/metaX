@@ -1096,7 +1096,10 @@ setMethod("plotPeakSumDist", signature(para = "metaXpara"),
           function(para,valueID="value",width=8,height=5,...){
     
     dat <- ddply(para@peaksData,.(sample,batch,class,order),here(summarise),
-                   sum=sum(get(valueID)))
+                   sum=sum(get(valueID),na.rm = TRUE))
+    
+    dat <- para@peaksData %>% group_by(sample,batch,class,order) %>%
+        dplyr::summarise(sum=sum(!!(rlang::sym(valueID)),na.rm = TRUE))
     
     dat$batch <- as.character(dat$batch)
     dat$class <- as.character(dat$class)
