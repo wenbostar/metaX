@@ -11,7 +11,7 @@ normalize(para, method = "sum", valueID = "value", norFactor = NULL,
 \arguments{
 \item{para}{A metaXpara object.}
 
-\item{method}{The normalization method: sum, vsn, quantiles, 
+\item{method}{The normalization method: sum, median, vsn, quantiles, 
 quantiles.robust, sum, pqn, combat and tmm. Default is sum.}
 
 \item{valueID}{The name of the column which will be normalized.}
