@@ -514,7 +514,7 @@ setMethod("peakFinder", signature(para = "metaXpara"), function(para,...){
 ##' @rdname normalize
 ##' @docType methods
 ##' @param para A metaXpara object.
-##' @param method The normalization method: sum, vsn, quantiles, 
+##' @param method The normalization method: sum, median, vsn, quantiles, 
 ##' quantiles.robust, sum, pqn, combat and tmm. Default is sum.
 ##' @param valueID The name of the column which will be normalized.
 ##' @param norFactor The factor that will be used for normalization. This is 
@@ -574,6 +574,9 @@ setMethod("normalize",signature(para="metaXpara"),
                   
               }else if(!is.null(method) && method == "sum"){
                   x[,-1] <- apply(dat,2,function(x){x/sum(x,na.rm=TRUE)}) * mean(apply(dat,2,function(x){sum(x,na.rm=TRUE)}))
+                  
+              }else if(!is.null(method) && method == "median"){
+                  x[,-1] <- apply(dat,2,function(x){x/median(x,na.rm=TRUE)})
                   
               }else if(!is.null(method) && method == "pqn"){
                   ## Normalization of data with the Probabilistic Quotient 
