@@ -11,7 +11,8 @@ plotPCA(para, pcaMethod = "svdImpute", valueID = "valueNorm",
   showClass = TRUE, scale = "none", center = FALSE, saveRds = TRUE,
   legendRowBatch = NULL, legendRowClass = NULL,
   legendPosition = "top", classColor = NULL, pdfWidth = 4.38,
-  pdfHeight = 3.7, pngWidth = 4, pngHeight = 4.2, res = 120, ...)
+  pdfHeight = 3.7, pngWidth = 4, pngHeight = 4.2, res = 120,
+  plot3d = FALSE, reverse = FALSE, ...)
 }
 \arguments{
 \item{para}{A \code{metaXpara} object}
@@ -64,6 +65,8 @@ Default is NULL and use the default setting.}
 \item{pngHeight}{Height for PNG, default is 4.2 inch}
 
 \item{res}{resolution for PNG, default is 120}
+
+\item{reverse}{Default is FALSE. Change type between class and batch.}
 
 \item{...}{Additional parameter}
 }

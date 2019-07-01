@@ -1796,6 +1796,7 @@ setMethod("plotQCRLSC", signature(para = "metaXpara"), function(para,maxf=100){
 ##' @param pngWidth Width for PNG, default is 4 inch
 ##' @param pngHeight Height for PNG, default is 4.2 inch
 ##' @param res resolution for PNG, default is 120
+##' @param reverse Default is FALSE. Change type between class and batch.
 ##' @param ... Additional parameter
 ##' @return none
 ##' @author Bo Wen \email{wenbostar@@gmail.com}
@@ -1819,7 +1820,7 @@ setGeneric("plotPCA",function(para,pcaMethod="svdImpute",valueID="valueNorm",
                               classColor = NULL,
                               pdfWidth = 4.38,pdfHeight = 3.7,
                               pngWidth = 4,pngHeight = 4.2, res = 120,
-                              plot3d=FALSE,...)
+                              plot3d=FALSE,reverse=FALSE,...)
     standardGeneric("plotPCA"))
 ##' @describeIn plotPCA
 setMethod("plotPCA", signature(para = "metaXpara"), 
@@ -1832,7 +1833,8 @@ setMethod("plotPCA", signature(para = "metaXpara"),
                    classColor = NULL,
                    pdfWidth = 4.38,pdfHeight = 3.7,
                    pngWidth = 4.5,pngHeight = 4.1, res = 120,
-                   plot3d=FALSE,...){
+                   plot3d=FALSE,
+                   reverse=FALSE,...){
               
               message("plot PCA for value '",valueID,"'")
               
@@ -1943,7 +1945,11 @@ setMethod("plotPCA", signature(para = "metaXpara"),
               #save(plotData,file="plotdata.rda")
               if(showClass==TRUE){
                   if(is.null(classColor)){
-                      ggobj <- ggplot(data = plotData,aes(x=x,y=y,colour=class))
+                      if(reverse==FALSE){
+                          ggobj <- ggplot(data = plotData,aes(x=x,y=y,colour=class))
+                      }else{
+                          ggobj <- ggplot(data = plotData,aes(x=x,y=y,shape=class))  
+                      }
                   }else{
                       cat("Use user defined color for point!\n")
                       #save(plotData,classColor,file = "test.rda")
@@ -1983,8 +1989,13 @@ setMethod("plotPCA", signature(para = "metaXpara"),
                   ggobj <- ggobj + geom_text(aes(label=sample),size=labelSize,hjust=-0.2)
               }
               if(batch==TRUE){
-                  ggobj <- ggobj + geom_point(aes(shape=batch),size=pointSize)+
-                      scale_shape_manual(values=1:n_distinct(plotData$batch))
+                  if(reverse==FALSE){
+                      ggobj <- ggobj + geom_point(aes(shape=batch),size=pointSize)+
+                          scale_shape_manual(values=1:n_distinct(plotData$batch))
+                  }else{
+                      ggobj <- ggobj + geom_point(aes(colour=batch),size=pointSize)+
+                          scale_shape_manual(values=1:n_distinct(plotData$batch))
+                  }
               }else{
                   ggobj <- ggobj + geom_point(size=pointSize)
               }
@@ -2254,6 +2265,7 @@ setMethod("filterQCPeaks", signature(para = "metaXpara"),
 ##' @param ratio filter peaks which have missing value more than percent of 
 ##' "ratio", default is 0.8
 ##' @param byBatch filter peaks by batch
+##' @param byClass filter peaks by class
 ##' @param omit.negative A logical value indicates whether omit the negative 
 ##' value
 ##' @param ... Additional parameters 
@@ -2269,9 +2281,9 @@ setMethod("filterQCPeaks", signature(para = "metaXpara"),
 ##' sampleListFile(para) <- sfile
 ##' para <- reSetPeaksData(para)
 ##' p <- filterPeaks(para,ratio=0.2)
-setGeneric("filterPeaks",function(para,ratio=0.8,byBatch=FALSE,omit.negative=TRUE,...) standardGeneric("filterPeaks"))
+setGeneric("filterPeaks",function(para,ratio=0.8,byBatch=FALSE,byClass=FALSE,omit.negative=TRUE,...) standardGeneric("filterPeaks"))
 ##' @describeIn filterPeaks
-setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,byBatch=FALSE,omit.negative=TRUE,...){
+setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,byBatch=FALSE,byClass=FALSE,omit.negative=TRUE,...){
     peaksData <- para@peaksData
     #assign(x="filterRatio",value=ratio,envir=.GlobalEnv)
     filterRatio <- ratio
@@ -2288,7 +2300,16 @@ setMethod("filterPeaks", signature(para = "metaXpara"),function(para,ratio=0.8,b
             group_by(ID) %>%
             dplyr::summarise(rp=any(rp)) %>%
             ungroup()
-                
+    }else if(byClass==TRUE){
+        cat("filter peaks by class ...\n")
+        rpeak <- peaksData %>% filter(!is.na(class)) %>% 
+            group_by(ID,class) %>% 
+            dplyr::summarise(rp=countMissingValue(value,ratio=filterRatio,omit.negative)) %>%
+            ungroup() %>%
+            select(-batch) %>%
+            group_by(ID) %>%
+            dplyr::summarise(rp=any(rp)) %>%
+            ungroup()
     }else{
         rpeak <- peaksData %>% filter(!is.na(class)) %>% 
             group_by(ID) %>% 
