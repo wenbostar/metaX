@@ -11,7 +11,8 @@
 
 ## Installation
 
-``` r
+```r
+# The latest version of metaX is no longer available at Bioconductor.
 # Install the development version from GitHub:
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
