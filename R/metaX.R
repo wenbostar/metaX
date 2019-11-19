@@ -3734,11 +3734,13 @@ setMethod("plotHeatMap", signature(para = "metaXpara"),
                                  cluster_columns = as.dendrogram(o2[[1]]),
                                  show_row_names = show_rownames,
                                  show_column_names = show_colnames,
+								 jitter = 1e-10,
                                  top_annotation = ha,name = "value",...)
               }else{
                   hp1 <- Heatmap(x %>% as.matrix(),
                                  show_row_names = show_rownames,
                                  show_column_names = show_colnames,
+								 jitter = 1e-10,
                                  top_annotation = ha,name = "value",...)
               }
               draw(hp1)
