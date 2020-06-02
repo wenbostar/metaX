@@ -3868,12 +3868,12 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
               nm <- ddply(peaksData,.(ID),summarise,nmiss=sum(is.na(value))/length(value))
               
               dat <- as.data.frame(table(cut(nm$nmiss,breaks = seq(0,1,by=0.1))))
-              dat$breaks <- seq(0.1,1,by=0.1)
+              dat$breaks <- as.factor(seq(0.1,1,by=0.1))
               dat$ratio <- sprintf("%.2f%%",100*dat$Freq/nrow(nm))
               
               ggobj1 <- ggplot(data=dat,aes(x=breaks,y=Freq))+
-                  geom_bar(stat = "identity",width=0.07,fill="orangered")+
-                  scale_x_continuous(breaks=dat$breaks)+
+                  geom_bar(stat = "identity",width=0.6,fill="orangered")+
+                  #scale_x_continuous(breaks=dat$breaks)+
                   theme_bw()+
                   geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                   #ylab("Peaks number")+
@@ -3897,13 +3897,13 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                                   nmiss=sum(is.na(value))/length(value))
                       
                       dat <- as.data.frame(table(cut(nm$nmiss,breaks = seq(0,1,by=0.1))))
-                      dat$breaks <- seq(0.1,1,by=0.1)
+                      dat$breaks <- as.factor(seq(0.1,1,by=0.1))
                       dat$ratio <- sprintf("%.2f%%",100*dat$Freq/nrow(nm))
                       dat$class <- "Sample"
                       mdat <- bind_rows(mdat,dat)
                       ggobj <- ggplot(data=dat,aes(x=breaks,y=Freq))+
-                          geom_bar(stat = "identity",width=0.07,fill="orangered")+
-                          scale_x_continuous(breaks=dat$breaks)+
+                          geom_bar(stat = "identity",width=0.6,fill="orangered")+
+                          #scale_x_continuous(breaks=dat$breaks)+
                           theme_bw()+
                           geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                           #ylab("Peaks number")+
@@ -3921,14 +3921,14 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                               nmiss=sum(is.na(value))/length(value))
                   
                   dat <- as.data.frame(table(cut(nm$nmiss,breaks = seq(0,1,by=0.1))))
-                  dat$breaks <- seq(0.1,1,by=0.1)
+                  dat$breaks <- as.factor(seq(0.1,1,by=0.1))
                   dat$ratio <- sprintf("%.2f%%",100*dat$Freq/nrow(nm))
                   dat$class <- "QC"
                   mdat <- bind_rows(mdat,dat)
                   ggobj <- ggplot(data=dat,aes(x=breaks,y=Freq))+
-                      geom_bar(stat = "identity",width=0.07,fill="orangered")+
+                      geom_bar(stat = "identity",width=0.6,fill="orangered")+
                       theme_bw()+
-                      scale_x_continuous(breaks=dat$breaks)+
+                      #scale_x_continuous(breaks=dat$breaks)+
                       geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                       #ylab("Peaks number")+
                       xlab("Percent of missing value")+
@@ -3941,9 +3941,9 @@ setMethod("plotMissValue", signature(para = "metaXpara"),
                   print(ggobj)
                   
                   ggobj3 <- ggplot(data=mdat,aes(x=breaks,y=Freq,fill=class))+
-                      geom_bar(stat = "identity",width=0.07,position = "dodge")+
+                      geom_bar(stat = "identity",width=0.6,position = "dodge")+
                       theme_bw()+
-                      scale_x_continuous(breaks=dat$breaks)+
+                      #scale_x_continuous(breaks=dat$breaks)+
                       #geom_text(aes(label = ratio),vjust=-0.2,size=4)+
                       #ylab("Peaks number")+
                       xlab("Percent of missing value")+
